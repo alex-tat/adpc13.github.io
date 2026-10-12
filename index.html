@@ -175,6 +175,8 @@ dialog h2::before{content:"";display:inline-block;width:8px;height:22px;border-r
 .addcf{display:flex;gap:8px}.addcf input{flex:1}.lg{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:100}#toast.show{opacity:1;transform:translateX(-50%)}
 @media (max-width:899px){#dSet{height:auto;max-height:92vh;margin:auto auto 0;width:100%;border-radius:18px 18px 0 0}}
+#userbar{display:flex;flex-direction:column;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}#userbar .uc{font-size:.8rem;color:var(--mute);overflow-wrap:anywhere}
+@media (max-width:899px){header{position:relative}#userbar{position:absolute;right:12px;top:12px;margin:0;padding:0;border:0}#userbar .uc{display:none}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -530,6 +532,7 @@ else if(d.lvadd&&v){cfgSet({[d.lvadd]:P()[d.lvadd].map(x=>({...x})).concat({n:v,
 else if(d.cfadd&&v){const c=JSON.parse(JSON.stringify(P().cf));c[d.cfadd]=(c[d.cfadd]||[]).concat({k:slug(v),l:v,t:t.parentElement.querySelector("select").value});cfgSet({cf:c})}
 else if(t.id==="orgIn"&&v)cfgSet({org:v});
 else if(t.id==="byIn"){try{localStorage.setItem(KEY+"-by",v)}catch(x){}toast()}});
+function userbar(){if(document.getElementById("userbar"))return;const u=document.createElement("div");u.id="userbar";u.innerHTML='<span class="uc">'+esc(MY)+'</span><button class="btn sm" id="logoutTop" type="button">Se déconnecter</button>';document.querySelector("header").appendChild(u);$("#logoutTop").onclick=async()=>{if(SB){await SB.auth.signOut();location.reload()}}}
 const CFG=window.PC13||{};
 DL={save:({filename,data})=>{dl(filename,data);return Promise.resolve()}};
 function showLogin(sb){const d=document.createElement("div");d.id="login";d.style.cssText="position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;padding:16px";d.innerHTML=`<form style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;width:min(380px,100%);display:grid;gap:12px">${EMBLEM}<h2 style="margin:0">${esc(P().org)}</h2><p class="meta" style="margin:0">Connexion réservée à l'équipe</p><label>Email<input name="e" type="email" required autocomplete="username"></label><label>Mot de passe<input name="p" type="password" required autocomplete="current-password"></label><div id="lerr" style="color:var(--bad)"></div><button class="btn pri">Se connecter</button></form>`;document.body.appendChild(d);d.querySelector("form").onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){d.querySelector("#lerr").textContent="Connexion refusée : "+r.error.message;return}d.remove();start(sb,r.data.session)}}
@@ -543,7 +546,7 @@ const ck=await sb.from("checks").select("*").order("at",{ascending:true}).limit(
 document.body.classList.remove("locked");render();
 sb.channel("pc13").on("postgres_changes",{event:"*",schema:"public",table:"data"},p=>{if(p.new&&p.new.key)apply([p.new])}).on("postgres_changes",{event:"INSERT",schema:"public",table:"log"},p=>{const n=p.new;if(n&&!S.log.some(e=>e.at===n.at&&e.t===n.t)){S.log.push({at:n.at,by:n.by,t:n.t});logView()}}).on("postgres_changes",{event:"INSERT",schema:"public",table:"checks"},p=>{if(p.new&&!S.checks.some(c=>c.id===p.new.id)){S.checks.push(p.new);mergeChecks();prev=JSON.stringify(S);render()}}).subscribe(s=>{if(s==="SUBSCRIBED")setSync("ok","Synchronisé en équipe");else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT")setSync("err","Temps réel indisponible")});
 setSync("ok","Synchronisé en équipe");
-SB=sb;
+SB=sb;userbar();
 }
 (async()=>{
 if(!CFG.url||!CFG.key){setSync("err","Base non configurée : config.js manquant");return}
