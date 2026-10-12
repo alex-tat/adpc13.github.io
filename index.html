@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Matériel · Protection Civile 13</title>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4l16 6v12c0 10-7 18-16 22C15 40 8 32 8 22V10z' fill='%232F5FD0'/%3E%3Cpath d='M24 14v16M16 22h16' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#f3f5f8;--card:#fff;--ink:#14213d;--mute:#5d6b82;--line:#d9dfe8;--navy:#0b2a5b;--orange:#f26a1b;--ok:#1f7a4d;--warn:#b86e00;--bad:#c0392b;--okbg:#e3f4ea;--warnbg:#fdf0d8;--badbg:#fbe4e1;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1526;--card:#16213a;--ink:#e8edf6;--mute:#9aa8c2;--line:#2a3856;--navy:#7fa6ee;--okbg:#17382b;--warnbg:#3b2f14;--badbg:#40201d;--ok:#5fd09a;--warn:#f0b24c;--bad:#ff8b7e}}
@@ -112,6 +113,68 @@ dialog h2{margin:0 0 4px}
 @media (min-width:900px){nav button{color:rgba(255,255,255,.72);font-weight:700}nav button:hover{background:rgba(255,255,255,.08);color:#fff}nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 3px 0 0 var(--sun)}main{padding:32px 44px 64px}}
 @media (max-width:899px){nav button[aria-selected="true"]{background:transparent;color:var(--orange);box-shadow:inset 0 3px 0 var(--orange)}header h1::before{margin-right:8px}}
 body.locked header,body.locked main{display:none}
+:root{--bg:#F7F8FA;--card:#fff;--ink:#111827;--mute:#6B7280;--line:#E5E7EB;--navy:#2F5FD0;--orange:#2F5FD0;--sun:#2F5FD0;--side:#fff;--ok:#15803D;--warn:#B45309;--bad:#B91C1C;--okbg:#ECFDF3;--warnbg:#FFF7E6;--badbg:#FEF0F0;--soft:#EAF0FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1220;--card:#111A2E;--ink:#E5E7EB;--mute:#94A3B8;--line:#1F2A44;--navy:#6C95F5;--orange:#4F7CF0;--sun:#6C95F5;--side:#0E1628;--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--okbg:#10291C;--warnbg:#33290F;--badbg:#341618;--soft:#16264A}}
+:root[data-theme="dark"]{--bg:#0B1220;--card:#111A2E;--ink:#E5E7EB;--mute:#94A3B8;--line:#1F2A44;--navy:#6C95F5;--orange:#4F7CF0;--sun:#6C95F5;--side:#0E1628;--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--okbg:#10291C;--warnbg:#33290F;--badbg:#341618;--soft:#16264A}
+body,.btn,nav button,input,select,textarea{font-family:"Manrope",system-ui,sans-serif}
+h1,h2,h3,.stat b,.hero b{font-family:"Manrope",system-ui,sans-serif;font-weight:800;letter-spacing:-.01em}
+:root:root header{background:var(--side);color:var(--ink);border-bottom:1px solid var(--line)}
+header h1{font-size:1.05rem;font-weight:800}header h1::before{display:none}header p{color:var(--mute)}
+#brand{margin-bottom:12px}#brand img{height:44px;max-width:160px;object-fit:contain}#brand svg{display:block}
+.nl{display:flex;align-items:center;gap:11px}nav .nl svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn{border-radius:10px;box-shadow:none;font-weight:700}.btn.pri{box-shadow:none}
+input,select,textarea{border-radius:10px;background:var(--card)}
+.row,.stat,.hero,.card{border-radius:12px;box-shadow:none}
+.row{border:1px solid var(--line)}
+.row:has(.led.bad){box-shadow:inset 3px 0 0 var(--bad)}.row:has(.led.warn){box-shadow:inset 3px 0 0 #E0A100}.row:has(.led:not(.warn):not(.bad)){box-shadow:inset 3px 0 0 var(--ok)}
+.stat::before{display:none}.stat{padding:16px}.stat b{font-weight:800}.stat.bad b{color:var(--bad)}.stat.warn b{color:var(--warn)}.stat.ok b{color:var(--ok)}
+.hero{border:1px solid var(--line)}
+dialog{border-radius:14px;box-shadow:0 20px 50px rgba(15,23,42,.18)}
+.card{background:var(--card);border:1px solid var(--line);padding:20px;margin:0 0 16px}
+fieldset.card{min-width:0;display:block}fieldset.card legend{font-weight:800;font-size:1rem;padding:0 8px;margin-left:-8px}
+.ph{margin:0 0 18px;font-size:1.5rem}
+#fSet label{margin-bottom:14px}#fSet .hint{margin:-8px 0 14px;font-size:.82rem;color:var(--mute)}
+.savebar{position:sticky;bottom:0;z-index:5;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--bg);padding:14px 0;border-top:1px solid var(--line)}
+#logoPrev{height:48px;max-width:160px;object-fit:contain;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff}
+#set{max-width:780px}
+@media (min-width:900px){header{border-bottom:0;border-right:1px solid var(--line)}nav button{color:var(--mute)}nav button:hover{background:var(--bg);color:var(--ink)}nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:var(--soft);color:var(--orange);box-shadow:none}main{max-width:1180px}}
+@media (max-width:899px){header{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}#brand{grid-row:span 2;margin:0}#brand svg,#brand img{height:36px;width:auto}header h1,header p{grid-column:2;margin:0}nav button{padding:6px 10px;font-size:.68rem}nav .nl{flex-direction:column;gap:3px}.savebar{bottom:64px}nav button[aria-selected="true"]{background:var(--soft);box-shadow:none}}
+body{background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:24px 24px}
+.tile{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--soft);color:var(--orange);flex:none}
+.tile svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h2 svg{width:20px;height:20px;fill:none;stroke:var(--orange);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:8px}
+.row>.tile{margin-right:2px}
+.stat{position:relative;overflow:hidden}.stat::after{content:"";position:absolute;right:-16px;top:-16px;width:62px;height:62px;border-radius:50%;background:var(--soft);opacity:.8}
+.stat>.tile{border-radius:50%;margin-bottom:10px;position:relative;z-index:1}.stat.bad>.tile{background:var(--badbg);color:var(--bad)}.stat.warn>.tile{background:var(--warnbg);color:var(--warn)}.stat.ok>.tile{background:var(--okbg);color:var(--ok)}
+.hero::after{content:"";position:absolute;right:-24px;top:-34px;width:140px;height:140px;border-radius:50%;background:currentColor;opacity:.08}
+.sbanner{position:relative;overflow:hidden;display:flex;gap:14px;align-items:center;padding:18px 20px;margin-bottom:16px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.sbanner::before{content:"";position:absolute;right:-30px;top:-44px;width:150px;height:150px;border-radius:50%;background:var(--soft)}
+.sbanner::after{content:"";position:absolute;right:80px;bottom:-28px;width:64px;height:64px;border-radius:16px;transform:rotate(18deg);background:var(--soft);opacity:.7}
+.sbanner>*{position:relative;z-index:1}.sbanner h2{margin:0;font-size:1.25rem}.sbanner p{margin:2px 0 0;color:var(--mute);font-size:.9rem}.sbanner .tile{width:48px;height:48px;border-radius:14px;background:var(--orange);color:#fff}
+.eic{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:var(--soft);color:var(--orange)}.eic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bar .btn.pri::before{content:"+";font-weight:800;margin-right:6px}
+dialog h2::before{content:"";display:inline-block;width:8px;height:22px;border-radius:4px;background:var(--orange);margin-right:10px;vertical-align:-4px}
+#login,#pub{background:radial-gradient(circle at 12% 18%,var(--soft) 0 130px,transparent 131px),radial-gradient(circle at 88% 82%,var(--soft) 0 170px,transparent 171px),var(--bg)!important}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.tileb{position:relative;overflow:hidden;text-align:left;display:grid;gap:6px;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--card);cursor:pointer;font:inherit;color:var(--ink)}
+.tileb::after{content:"";position:absolute;right:-18px;bottom:-18px;width:80px;height:80px;background:var(--soft);border-radius:50%;opacity:.8}
+.tileb:nth-child(2)::after{border-radius:18px;transform:rotate(20deg)}.tileb:nth-child(3)::after{border-radius:50% 0}.tileb:nth-child(4)::after{border-radius:22px 50%}.tileb:nth-child(5)::after{border-radius:50% 50% 0 50%}
+.tileb .tile{width:46px;height:46px;position:relative;z-index:1}.tileb b{font-weight:800;position:relative;z-index:1}.tileb .sm{color:var(--mute);font-size:.85rem;position:relative;z-index:1}
+.tileb:hover{border-color:var(--orange)}
+#dSet{width:min(480px,100%);height:100vh;max-height:100vh;margin:0 0 0 auto;border-radius:20px 0 0 20px;padding:0;overflow:auto}
+#dSet[open]{animation:drw .22s ease-out}@keyframes drw{from{transform:translateX(30px);opacity:0}}
+.dhead{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--card);border-bottom:1px solid var(--line)}.dhead h2{margin:0;font-size:1.15rem}
+.pnl{padding:16px 20px 30px;display:grid;gap:12px}.pnl h4{margin:12px 0 0;font-size:.82rem;color:var(--mute);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border-radius:99px;padding:5px 6px 5px 12px;font-size:.88rem}.chip button{border:0;background:var(--card);width:20px;height:20px;border-radius:50%;cursor:pointer;color:var(--mute)}
+.lr{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px}.lr b{flex:1;font-weight:700}.dots{display:flex;gap:6px}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;opacity:.3;padding:0}.dot.lv-ok{background:var(--ok)}.dot.lv-at{background:#E0A100}.dot.lv-pb{background:var(--bad)}.dot.on{opacity:1;border-color:var(--ink)}
+.x{border:0;background:transparent;cursor:pointer;color:var(--mute);font-size:1.15rem}
+.step{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;margin-bottom:6px}.step small{display:block;color:var(--mute);font-size:.78rem}.sb{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.sb button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:1.1rem;cursor:pointer;color:var(--ink)}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}.seg button{flex:1;border:0;border-radius:9px;padding:9px 6px;background:transparent;cursor:pointer;font:inherit;color:var(--mute);font-weight:700}.seg button.on{background:var(--card);color:var(--orange);box-shadow:0 1px 3px rgba(15,23,42,.14)}
+.addcf{display:flex;gap:8px}.addcf input{flex:1}.lg{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:100}#toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-width:899px){#dSet{height:auto;max-height:92vh;margin:auto auto 0;width:100%;border-radius:18px 18px 0 0}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -146,27 +209,46 @@ body.locked header,body.locked main{display:none}
   <section id="veh" hidden><div class="bar"><button class="btn pri" id="addVeh">Ajouter un véhicule</button></div><div id="vlist"></div></section>
   <section id="tasks" hidden><div class="bar"><button class="btn pri" id="addTask">Ajouter une tâche</button></div><div id="tlist"></div></section>
   <section id="log" hidden><div class="bar"><input id="lgq" type="search" placeholder="Rechercher dans l'historique…" aria-label="Rechercher dans l'historique"><select id="lgf" aria-label="Type d'action"><option value="">Toutes les actions</option><option value="Ajout">Ajouts</option><option value="Modification">Modifications</option><option value="Suppression">Suppressions</option><option value="Contrôle">Contrôles</option><option value="Retour">Retours</option></select><button class="btn" id="csvLog">Copier en CSV</button></div><div id="lglist"></div></section>
-  <section id="set" hidden><form id="fSet" style="display:grid;gap:12px;max-width:560px">
+  <section id="set" hidden>
+<div class="sbanner"><span class="tile"></span><div><h2>Paramètres</h2><p>Touche une carte pour la modifier : chaque changement est enregistré tout de suite.</p></div></div>
+<div id="setTiles" class="tiles"></div>
+<form id="fSet" hidden>
+<fieldset class="card"><legend>Général</legend>
 <label>Nom de la structure<input name="org" required></label>
-<label>Catégories de matériel (une par ligne)<textarea name="cats" rows="5"></textarea></label>
-<label>États du matériel (libellé ; ok, attention ou problème)<textarea name="states" rows="4"></textarea></label>
-<label>Checklist de vérification des radios (un point par ligne)<textarea name="checks" rows="8"></textarea></label>
+<div class="two"><label>Thème de cet appareil<select name="theme"><option value="auto">Automatique</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><label>Mon nom pour les contrôles<input name="byName" placeholder="Prérempli lors des contrôles"></label></div>
+</fieldset>
+<fieldset class="card"><legend>Matériel et véhicules</legend>
+<label>Catégories de matériel<textarea name="cats" rows="4"></textarea></label><p class="hint">Une catégorie par ligne.</p>
+<label>États du matériel<textarea name="states" rows="4"></textarea></label><p class="hint">Un état par ligne : libellé ; ok, attention ou problème.</p>
+<label>États des véhicules<textarea name="vstates" rows="3"></textarea></label><p class="hint">Même format : libellé ; ok, attention ou problème.</p>
+<label>Champs supplémentaires du matériel<textarea name="cfItems" rows="2"></textarea></label>
+<label>Champs supplémentaires des véhicules<textarea name="cfVeh" rows="2"></textarea></label>
+<label>Champs supplémentaires des radios<textarea name="cfRadios" rows="2"></textarea></label><p class="hint">Un champ par ligne : libellé ; texte, nombre ou date. Renommer un champ le détache des valeurs déjà saisies.</p>
+</fieldset>
+<fieldset class="card"><legend>Contrôles et alertes</legend>
+<label>Checklist de vérification des radios<textarea name="checks" rows="6"></textarea></label><p class="hint">Un point de contrôle par ligne.</p>
 <div class="two"><label>Radios : période de vérification (jours)<input type="number" name="radioDays" min="1"></label><label>Radios : alerte avant échéance (jours)<input type="number" name="soon" min="0"></label></div>
 <div class="two"><label>Péremption : alerte avant (jours)<input type="number" name="expDays" min="0"></label><label>Lots : alerte avant contrôle (jours)<input type="number" name="lotWarn" min="0"></label></div>
 <div class="two"><label>Véhicules : alerte avant échéance (jours)<input type="number" name="vehDays" min="0"></label><label>Échéancier : horizon (jours)<input type="number" name="horizon" min="1"></label></div>
-<div class="two"><label>Contrôle d'un lot par défaut (jours)<input type="number" name="lotFreq" min="1"></label><label>Thème de cet appareil<select name="theme"><option value="auto">Automatique</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label></div>
-<label>États des véhicules (libellé ; ok, attention ou problème)<textarea name="vstates" rows="3"></textarea></label>
-<label>Champs supplémentaires du matériel (libellé ; texte, nombre ou date)<textarea name="cfItems" rows="3"></textarea></label>
-<label>Champs supplémentaires des véhicules<textarea name="cfVeh" rows="3"></textarea></label>
-<label>Champs supplémentaires des radios<textarea name="cfRadios" rows="3"></textarea></label>
+<label>Contrôle d'un lot par défaut (jours)<input type="number" name="lotFreq" min="1"></label>
+</fieldset>
+<fieldset class="card"><legend>Équipe</legend>
 <label>Rôle des nouveaux arrivants<select name="defRole"><option value="lecteur">Lecteur (lecture seule)</option><option value="controleur">Contrôleur (contrôles et sorties)</option><option value="gestionnaire">Gestionnaire (saisie)</option><option value="admin">Administrateur</option></select></label>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri">Enregistrer les paramètres</button><button class="btn" type="button" id="setReset">Rétablir les valeurs par défaut</button><button class="btn" type="button" id="setClean">Supprimer les exemples</button><button class="btn" type="button" id="bkSave">Sauvegarder les données</button><label class="btn" style="display:inline-block">Restaurer une sauvegarde<input type="file" id="bkLoad" accept=".json" hidden></label></div></form><div id="roleBox" style="max-width:560px;margin-top:24px"></div></section>
+</fieldset>
+<div class="savebar"><button class="btn pri">Enregistrer les paramètres</button><span class="meta">Les changements sont partagés avec toute l'équipe.</span></div>
+</form>
+</section>
   <section id="cal" hidden><div id="callist"></div></section>
   <section id="loans" hidden><div class="bar"><button class="btn pri" id="addLoan">Enregistrer une sortie</button></div><div id="llist"></div></section>
   <p class="note">Avec le badge « Synchronisé en équipe », les données sont partagées en temps réel entre les personnes qui ont accès à cette page. En mode local, elles restent sur cet appareil. Les exemples peuvent être supprimés.</p>
 </main>
 
 <dialog id="dAsk"><form method="dialog"><p id="askT" style="margin:0;white-space:pre-line"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" value="no" id="askNo">Annuler</button><button class="btn pri" value="yes">OK</button></div></form></dialog>
+<dialog id="dSet"><div class="dhead"><h2 id="dSetT"></h2><button class="btn sm" id="dSetX" type="button">Fermer</button></div>
+<div id="p_gen" class="pnl"></div><div id="p_mat" class="pnl" hidden></div><div id="p_ctl" class="pnl" hidden></div>
+<div id="p_eq" class="pnl" hidden><div id="eqTop"></div><div id="roleBox" class="card"></div></div>
+<div id="p_data" class="pnl" hidden><p class="meta" style="margin:0">Sauvegarde complète, nettoyage des exemples, diagnostic de la synchronisation et compte.</p>
+<button class="btn" type="button" id="bkSave">Sauvegarder les données</button><label class="btn" style="display:block;text-align:center;margin:0">Restaurer une sauvegarde<input type="file" id="bkLoad" accept=".json" hidden></label><button class="btn" type="button" id="setClean">Supprimer les exemples</button><button class="btn" type="button" id="setReset">Rétablir les paramètres par défaut</button><button class="btn" type="button" id="diagBtn">Diagnostic de la synchronisation</button><button class="btn" type="button" id="logoutBtn">Se déconnecter</button></div></dialog>
 <dialog id="dRadio"><form method="dialog" id="fRadio">
   <h2 id="dRadioT">Radio</h2>
   <div class="two"><label>N° de série<input name="serial" required></label><label>Repère interne<input name="tag" placeholder="ex. PC13-014"></label></div>
@@ -300,14 +382,14 @@ $("#catSel").innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join("");
 document.querySelector("#fItem [name=state]").innerHTML=p.states.map(s=>`<option>${esc(s.n)}</option>`).join("");
 document.querySelector("header h1").textContent=p.org;document.title=p.org;
 let t="auto";try{t=localStorage.getItem(KEY+"-theme")||"auto"}catch(e){}if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;
-const f=$("#fSet");if(document.activeElement.form!==f){f.org.value=p.org;f.cats.value=p.cats.join("\n");f.states.value=p.states.map(s=>s.n+" ; "+s.l).join("\n");f.checks.value=p.checks.join("\n");["radioDays","soon","expDays","lotWarn","vehDays","horizon","lotFreq"].forEach(k=>f[k].value=p[k]);f.theme.value=t;f.vstates.value=p.vstates.map(s=>s.n+" ; "+s.l).join("\n");f.defRole.value=p.defRole;f.cfItems.value=cfTxt(p.cf.items);f.cfVeh.value=cfTxt(p.cf.veh);f.cfRadios.value=cfTxt(p.cf.radios)}}
+const f=$("#fSet");if(document.activeElement.form!==f){f.org.value=p.org;f.cats.value=p.cats.join("\n");f.states.value=p.states.map(s=>s.n+" ; "+s.l).join("\n");f.checks.value=p.checks.join("\n");["radioDays","soon","expDays","lotWarn","vehDays","horizon","lotFreq"].forEach(k=>f[k].value=p[k]);f.theme.value=t;try{f.byName.value=localStorage.getItem(KEY+"-by")||""}catch(e){}f.vstates.value=p.vstates.map(s=>s.n+" ; "+s.l).join("\n");f.defRole.value=p.defRole;f.cfItems.value=cfTxt(p.cf.items);f.cfVeh.value=cfTxt(p.cf.veh);f.cfRadios.value=cfTxt(p.cf.radios)}}
 $("#fSet").onsubmit=e=>{e.preventDefault();const f=e.target,L=t=>t.split("\n").map(s=>s.trim()).filter(Boolean);
 const st=L(f.states.value).map(s=>{const[n,l]=s.split(";").map(x=>x.trim());const lv=(l||"").toLowerCase();return{n,l:["ok","attention","problème"].includes(lv)?lv:"ok"}});
-const v={id:1,org:f.org.value.trim()||DEF.org,cats:L(f.cats.value),states:st.length?st:DEF.states,checks:L(f.checks.value),vstates:parseLv(f.vstates.value).length?parseLv(f.vstates.value):DEF.vstates,defRole:f.defRole.value,cf:{items:parseCf(f.cfItems.value),veh:parseCf(f.cfVeh.value),radios:parseCf(f.cfRadios.value)}};
+const v={id:1,logo:LOGO_NEW!==undefined?LOGO_NEW:(P().logo||""),org:f.org.value.trim()||DEF.org,cats:L(f.cats.value),states:st.length?st:DEF.states,checks:L(f.checks.value),vstates:parseLv(f.vstates.value).length?parseLv(f.vstates.value):DEF.vstates,defRole:f.defRole.value,cf:{items:parseCf(f.cfItems.value),veh:parseCf(f.cfVeh.value),radios:parseCf(f.cfRadios.value)}};
 ["radioDays","soon","expDays","lotWarn","vehDays","horizon","lotFreq"].forEach(k=>{const n=f[k].value===""?DEF[k]:+f[k].value;v[k]=Math.max(["radioDays","horizon","lotFreq"].includes(k)?1:0,n)});
 if(!v.cats.length)v.cats=DEF.cats;if(!v.checks.length)v.checks=DEF.checks;
-try{localStorage.setItem(KEY+"-theme",f.theme.value)}catch(x){}
-S.cfg=[v];save();render()};
+try{localStorage.setItem(KEY+"-theme",f.theme.value);localStorage.setItem(KEY+"-by",f.byName.value.trim())}catch(x){}
+LOGO_NEW=undefined;S.cfg=[v];save();render()};
 $("#setReset").onclick=async()=>{if(await ask("Rétablir tous les paramètres par défaut ?")){S.cfg=[];try{localStorage.removeItem(KEY+"-theme")}catch(e){}save();render()}};
 $("#setClean").onclick=async()=>{if(await ask("Supprimer les radios et le matériel d'exemple ?")){S.radios=S.radios.filter(r=>!/exemple/i.test(r.tag||""));S.items=S.items.filter(i=>!/exemple/i.test(i.name||""));save();render()}};
 const ROLES={lecteur:"Lecteur (lecture seule)",controleur:"Contrôleur (contrôles et sorties)",gestionnaire:"Gestionnaire (saisie)",admin:"Administrateur"};
@@ -318,7 +400,7 @@ function cfLine(k,o){const t=(P().cf[k]||[]).filter(f=>(o.cf||{})[f.k]).map(f=>e
 function cfTxt(a){return(a||[]).map(x=>x.l+" ; "+x.t).join("\n")}
 function parseCf(t){return t.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{const[l,ty]=s.split(";").map(x=>x.trim());return{k:l.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||"champ",l,t:["texte","nombre","date"].includes((ty||"").toLowerCase())?ty.toLowerCase():"texte"}})}
 function parseLv(t){return t.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{const[n,l]=s.split(";").map(x=>x.trim());const lv=(l||"").toLowerCase();return{n,l:["ok","attention","problème"].includes(lv)?lv:"ok"}})}
-function cfgExtra(p){document.body.dataset.role=myRole();const vs=document.querySelector("#fVeh [name=state]"),vh=p.vstates.map(s=>`<option>${esc(s.n)}</option>`).join("");if(vs.dataset.sig!==vh){vs.innerHTML=vh;vs.dataset.sig=vh}
+function cfgExtra(p){brand(p);document.body.dataset.role=myRole();const vs=document.querySelector("#fVeh [name=state]"),vh=p.vstates.map(s=>`<option>${esc(s.n)}</option>`).join("");if(vs.dataset.sig!==vh){vs.innerHTML=vh;vs.dataset.sig=vh}
 [["#fRadio","radios"],["#fItem","items"],["#fVeh","veh"]].forEach(([id,key])=>{const form=document.querySelector(id);let c=form.querySelector(".cfx");if(!c){c=document.createElement("div");c.className="cfx";c.style.cssText="display:grid;gap:12px";form.insertBefore(c,form.lastElementChild)}const h=(p.cf[key]||[]).map(x=>`<label>${esc(x.l)}<input name="cf_${x.k}" type="${x.t==="nombre"?"number":x.t==="date"?"date":"text"}"></label>`).join("");if(c.dataset.sig!==h){c.innerHTML=h;c.dataset.sig=h}});
 if(document.activeElement.id!=="rsearch")rolesView()}
 async function names(){if(!USER)return;const ids=[...new Set([...S.roles.map(r=>r.id),...S.log.map(e=>e.by)].filter(Boolean))];try{const ps=await USER.profiles(ids);ids.forEach(i=>NAMES[i]=(ps[i]&&ps[i].name)||NAMES[i]||"")}catch(e){}}
@@ -341,11 +423,11 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]
 let CAL=new Date();CAL.setDate(1);
 function events(){const e=[],add=(d,t)=>{if(d)e.push([d,t])};S.veh.forEach(v=>{add(v.ct,"CT · "+v.name);add(v.ent,"Entretien · "+v.name)});S.tasks.filter(t=>!t.done).forEach(t=>add(t.due,"Tâche · "+t.txt));S.loans.filter(l=>!l.back).forEach(l=>add(l.due,"Retour · "+l.what));S.radios.forEach(r=>{const d=due(r);if(d)add(ymd(d),"Radio · "+r.serial)});S.items.forEach(i=>add(i.exp,"Péremption · "+i.name));S.lots.forEach(l=>{if(l.last)add(ymd(new Date(new Date(l.last+"T00:00:00").getTime()+l.freq*864e5)),"Contrôle · "+l.name);(l.items||[]).forEach(i=>{if(i.exp)add(ymd(lastDay(i.exp)),"Péremption · "+i.n+" ("+l.name+")")})});return e}
 function calView(){const y=CAL.getFullYear(),m=CAL.getMonth(),ev=events(),first=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),p=y+"-"+String(m+1).padStart(2,"0");let h=`<div class="bar"><button class="btn" data-cal="-1">Mois précédent</button><b style="align-self:center;flex:1;text-align:center">${CAL.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</b><button class="btn" data-cal="1">Mois suivant</button></div><div class="cal">`;["L","M","M","J","V","S","D"].forEach(x=>h+=`<div class="ch">${x}</div>`);for(let i=0;i<first;i++)h+="<div></div>";for(let d=1;d<=n;d++){const k=p+"-"+String(d).padStart(2,"0"),l=ev.filter(x=>x[0]===k);h+=`<div class="cd${k===today()?" td":""}"><b>${d}</b>${l.slice(0,2).map(x=>`<div class="ce${k<today()?" ov":""}">${esc(x[1])}</div>`).join("")}${l.length>2?`<div class="ce">+${l.length-2}</div>`:""}</div>`}h+="</div>";const mo=ev.filter(x=>x[0].startsWith(p)).sort((a,b)=>a[0].localeCompare(b[0]));h+=mo.length?mo.map(x=>`<div class="row"><div class="main">${esc(x[1])}</div><div class="meta">${fr(x[0])}${x[0]<today()?" · dépassée":""}</div></div>`).join(""):'<div class="empty">Aucune échéance ce mois-ci.</div>';$("#callist").innerHTML=h}
-function badges(){const c={lots:S.lots.filter(l=>lotSt(l).k==="bad").length,veh:S.veh.filter(v=>vehSt(v).k==="bad").length,radios:S.radios.filter(r=>status(r).k==="late").length,loans:S.loans.filter(l=>!l.back&&l.due&&l.due<today()).length,tasks:S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).length,items:S.items.filter(i=>(+i.min&&+i.qty<=+i.min)||(i.exp&&dd(i.exp)<0)||stLvl(i.state)==="problème").length};document.querySelectorAll("nav button").forEach(b=>{if(!b.dataset.l)b.dataset.l=b.textContent;const n=c[b.dataset.tab]||0;b.innerHTML=esc(b.dataset.l)+(n?` <span class="tag t-bad">${n}</span>`:"")})}
+function badges(){const c={lots:S.lots.filter(l=>lotSt(l).k==="bad").length,veh:S.veh.filter(v=>vehSt(v).k==="bad").length,radios:S.radios.filter(r=>status(r).k==="late").length,loans:S.loans.filter(l=>!l.back&&l.due&&l.due<today()).length,tasks:S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).length,items:S.items.filter(i=>(+i.min&&+i.qty<=+i.min)||(i.exp&&dd(i.exp)<0)||stLvl(i.state)==="problème").length};document.querySelectorAll("nav button").forEach(b=>{if(!b.dataset.l)b.dataset.l=b.textContent;const n=c[b.dataset.tab]||0;b.innerHTML='<span class="nl">'+(ICONS[b.dataset.tab]||"")+esc(b.dataset.l)+'</span>'+(n?` <span class="tag t-bad">${n}</span>`:"")})}
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-cal]");if(b){CAL.setMonth(CAL.getMonth()+ +b.dataset.cal);calView()}const a=e.target.closest("[data-act]");if(!a||(a.dataset.act!=="histLot"&&a.dataset.act!=="histR"))return;const o=(a.dataset.act==="histLot"?S.lots:S.radios).find(x=>x.id===+a.dataset.id);if(!o)return;$("#hT").textContent="Historique · "+(o.name||o.serial);const h=(o.hist||[]).slice().reverse();$("#hBody").innerHTML=h.length?h.map(x=>`<div class="row"><div class="main"><span class="tag ${x.ok?"t-ok":"t-bad"}">${x.ok?"Conforme":"Non conforme"}</span> ${fr(x.date)} · ${esc(x.by)}${x.missing&&x.missing.length?`<div class="hist">Manque : ${esc(x.missing.join(", "))}</div>`:""}${x.failed&&x.failed.length?`<div class="hist">Points en défaut : ${esc(x.failed.join(", "))}</div>`:""}${x.notes?`<div class="hist">${esc(x.notes)}</div>`:""}</div></div>`).join(""):'<div class="empty">Aucun contrôle enregistré.</div>';$("#dHist").showModal()});
 function health(){const od=x=>!x.back&&x.due&&x.due<today();return S.lots.filter(l=>lotSt(l).k!=="ok").length+S.veh.filter(v=>vehSt(v).k!=="ok").length+S.radios.filter(r=>["late","none"].includes(status(r).k)).length+S.loans.filter(od).length+S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).length+S.items.filter(i=>(+i.min&&+i.qty<=+i.min)||(i.exp&&dd(i.exp)<0)||stLvl(i.state)==="problème").length}
 function hero(){const n=health();return `<div class="hero${n?" bad":""}"><span class="led${n?" bad":""}"></span><div><b>${n?n+(n>1?" points à traiter":" point à traiter"):"Tout est en ordre"}</b><span>${n?"Consulte les alertes ci-dessous":"Aucune alerte en cours"}</span></div></div>`}
-function render(){[applyCfg,badges,calView,home,lots,vehs,tasks,radios,items,loans,logView].forEach(f=>{try{f()}catch(e){showErr(e)}})}
+function render(){[applyCfg,badges,calView,home,lots,vehs,tasks,radios,items,loans,logView,renderSet,decorate].forEach(f=>{try{f()}catch(e){showErr(e)}})}
 // tabs
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));["home","lots","veh","tasks","cal","radios","items","loans","log","set"].forEach(t=>$("#"+t).hidden=t!==b.dataset.tab)});
 $("#rq").oninput=radios;$("#rf").onchange=radios;$("#iq").oninput=items;$("#ic").onchange=items;
@@ -388,13 +470,69 @@ async function publicCheck(sb,kind,id,sess){const d=document.createElement("div"
 const r=await sb.rpc("public_target",{p_kind:kind,p_id:id});
 if(r.error||!r.data){d.innerHTML='<div style="max-width:560px;margin:auto"><h2>Contrôle indisponible</h2><p class="meta">Ce QR code n\'est plus valide ou la base est injoignable.</p></div>';return}
 const t=r.data,lots=t.lots||[];let nm="";try{nm=localStorage.getItem(KEY+"-by")||""}catch(e){}if(!nm&&sess)nm=sess.user.email||"";
-d.innerHTML=`<div style="max-width:560px;margin:auto;display:grid;gap:14px"><h2 style="margin:0">${esc(t.name)}</h2>`+(lots.length?lots.map((l,i)=>`<form data-i="${i}" class="row" style="display:grid;gap:10px"><h3>${esc(l.name)}</h3>${(l.items||[]).map((x,k)=>`<label class="chk"><input type="checkbox" checked data-k="${k}"> ${esc(x.qty)} × ${esc(x.n)}${x.exp?` <span class="tag t-n">exp. ${esc(String(x.exp).slice(5))}/${esc(String(x.exp).slice(0,4))}</span>`:""}</label>`).join("")}<label>Votre nom<input name="by" required value="${esc(nm)}"></label><label>Remarques<input name="notes"></label><button class="btn pri">Valider le contrôle</button></form>`).join(""):'<p class="meta">Aucun lot rattaché à ce véhicule.</p>')+(sess?'<a href="'+esc(BASE)+'">Ouvrir l\'application</a>':'')+'</div>';
+d.innerHTML=`<div style="max-width:560px;margin:auto;display:grid;gap:14px">${EMBLEM}<h2 style="margin:0">${esc(t.name)}</h2>`+(lots.length?lots.map((l,i)=>`<form data-i="${i}" class="row" style="display:grid;gap:10px"><h3>${esc(l.name)}</h3>${(l.items||[]).map((x,k)=>`<label class="chk"><input type="checkbox" checked data-k="${k}"> ${esc(x.qty)} × ${esc(x.n)}${x.exp?` <span class="tag t-n">exp. ${esc(String(x.exp).slice(5))}/${esc(String(x.exp).slice(0,4))}</span>`:""}</label>`).join("")}<label>Votre nom<input name="by" required value="${esc(nm)}"></label><label>Remarques<input name="notes"></label><button class="btn pri">Valider le contrôle</button></form>`).join(""):'<p class="meta">Aucun lot rattaché à ce véhicule.</p>')+(sess?'<a href="'+esc(BASE)+'">Ouvrir l\'application</a>':'')+'</div>';
 d.querySelectorAll("form").forEach(f=>{f.onsubmit=async ev=>{ev.preventDefault();const l=lots[+f.dataset.i],miss=(l.items||[]).filter((x,k)=>!f.querySelector('[data-k="'+k+'"]').checked).map(x=>x.n),by=f.elements.by.value.trim();try{localStorage.setItem(KEY+"-by",by)}catch(e){}
 const q=await sb.from("checks").insert({kind:"lot",ref_id:String(l.id),ref_name:l.name,by,ok:!miss.length,missing:miss,notes:f.elements.notes.value.trim()});
 f.innerHTML=q.error?'<p style="color:var(--bad)">Échec de l\'enregistrement : '+esc(q.error.message)+'</p>':'<h3>✓ Contrôle enregistré</h3><p class="meta">'+(miss.length?"Manque signalé : "+esc(miss.join(", ")):"Tout est conforme.")+'</p>'}})}
+const EMBLEM='<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><path d="M24 4l16 6v12c0 10-7 18-16 22C15 40 8 32 8 22V10z" fill="var(--orange)"/><path d="M24 14v16M16 22h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>';
+const IC=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
+const ICONS={home:IC('<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>'),lots:IC('<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'),veh:IC('<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>'),tasks:IC('<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'),cal:IC('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),radios:IC('<rect x="4" y="9" width="16" height="12" rx="2"/><path d="M8 9l8-6M8 14h4M8 17h8"/>'),items:IC('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5M3 17l9 5 9-5"/>'),loans:IC('<path d="M4 8h14l-3-3M20 16H6l3 3"/>'),log:IC('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),set:IC('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>')};
+let LOGO_NEW,SB=null;
+function brand(p){const h=document.querySelector("header");let b=document.getElementById("brand");if(!b){b=document.createElement("div");b.id="brand";h.insertBefore(b,h.firstChild)}const x=p.logo?'<img alt="" src="'+esc(p.logo)+'">':EMBLEM;if(b.dataset.s!==x){b.dataset.s=x;b.innerHTML=x}const pv=document.getElementById("logoPrev");if(pv&&LOGO_NEW===undefined){pv.src=p.logo||"";pv.hidden=!p.logo}}
+document.addEventListener("change",e=>{if(e.target.id!=="logoFile"||!e.target.files[0])return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,160/im.height),c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext("2d").drawImage(im,0,0,c.width,c.height);cfgSet({logo:c.toDataURL("image/png")})};im.src=rd.result};rd.readAsDataURL(e.target.files[0])});
+$("#diagBtn").onclick=diag;
+$("#logoutBtn").onclick=async()=>{if(SB){await SB.auth.signOut();location.reload()}else notify("Tu n'es pas connecté.")};
+Object.assign(ICONS,{bell:IC('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10 21a2 2 0 0 0 4 0"/>'),warn:IC('<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h0"/>'),check:IC('<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'),wrench:IC('<path d="M14 6a4 4 0 0 0 5 5l-9 9a2 2 0 0 1-3-3l9-9a4 4 0 0 0-2-2z"/>'),inbox:IC('<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/>'),users:IC('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 15c3 0 5 1.5 5 4"/>'),db:IC('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>'),shield:IC('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 8v6M9 11h6"/>')});
+const htm=s=>{const t=document.createElement("template");t.innerHTML=s.trim();return t.content.firstChild};
+const TILE=k=>'<span class="tile">'+(ICONS[k]||"")+'</span>';
+const SUB={lots:["Lots et sacs","Contenu, péremptions et contrôles réguliers"],veh:["Véhicules","Contrôle technique, entretien et disponibilité"],tasks:["Tâches","Actions à mener et échéances"],cal:["Calendrier","Toutes les échéances du mois"],radios:["Radios DP2400","Parc de radios et vérifications annuelles"],items:["Matériel","Inventaire, stocks et péremptions"],loans:["Sorties et retours","Matériel prêté et à récupérer"],log:["Historique","Toutes les actions de l'équipe"]};
+function decorate(){Object.entries(SUB).forEach(([k,[t,s]])=>{const sec=document.getElementById(k);if(sec&&!sec.querySelector(".sbanner"))sec.insertBefore(htm('<div class="sbanner">'+TILE(k)+'<div><h2>'+t+'</h2><p>'+s+'</p></div></div>'),sec.firstChild)});
+const sb=document.querySelector("#set .sbanner .tile");if(sb&&!sb.innerHTML)sb.innerHTML=ICONS.set;
+Object.entries({rlist:"radios",lotlist:"lots",vlist:"veh",ilist:"items",tlist:"tasks",llist:"loans",lglist:"log",callist:"cal"}).forEach(([id,k])=>document.querySelectorAll("#"+id+" .row").forEach(r=>{if(!r.querySelector(":scope>.tile"))r.insertBefore(htm(TILE(k)),r.firstChild)}));
+const ic=["radios","warn","log","check","items","wrench"];document.querySelectorAll("#home .stat").forEach((s,i)=>{if(!s.querySelector(".tile"))s.insertAdjacentHTML("afterbegin",TILE(ic[i]||"home"))});
+document.querySelectorAll("#home h2").forEach(x=>{if(x.querySelector("svg"))return;x.insertAdjacentHTML("afterbegin",/Alertes/.test(x.textContent)?ICONS.bell:/chéancier/.test(x.textContent)?ICONS.cal:ICONS.radios)});
+document.querySelectorAll("#home .row").forEach(r=>{if(!r.querySelector(":scope>.tile"))r.insertBefore(htm(TILE(r.querySelector(".acts")?"radios":r.querySelector(".meta")?"cal":"bell")),r.firstChild)});
+document.querySelectorAll(".empty").forEach(e=>{if(!e.querySelector(".eic"))e.insertAdjacentHTML("afterbegin",'<div class="eic">'+ICONS.inbox+'</div>')})}
+const slug=l=>l.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||"champ";
+function toast(t){let x=$("#toast");if(!x){x=document.createElement("div");x.id="toast";document.body.appendChild(x)}x.textContent=t||"Enregistré ✓";x.className="show";clearTimeout(x._t);x._t=setTimeout(()=>x.className="",1600)}
+function cfgSet(patch){S.cfg=[Object.assign({},P(),patch,{id:1})];save();render();toast()}
+const GRP={gen:["Général","set"],mat:["Matériel et véhicules","items"],ctl:["Contrôles et alertes","check"],eq:["Équipe et rôles","users"],data:["Données et compte","db"]};
+function renderSet(){const p=P(),esc2=esc;
+const chips=(k,ph)=>`<div class="chips">${p[k].map((c,i)=>`<span class="chip">${esc2(c)}<button type="button" data-ch="${k}" data-i="${i}" aria-label="Retirer">×</button></span>`).join("")}</div><input data-chadd="${k}" placeholder="${ph}">`;
+const LV={ok:"ok",attention:"at","problème":"pb"};
+const lv=(k,ph)=>`${p[k].map((s,i)=>`<div class="lr"><b>${esc2(s.n)}</b><span class="dots">${["ok","attention","problème"].map(v=>`<button type="button" class="dot lv-${LV[v]}${s.l===v?" on":""}" data-lv="${k}:${i}:${v}" title="${v}"></button>`).join("")}</span><button type="button" class="x" data-lvdel="${k}:${i}">×</button></div>`).join("")}<input data-lvadd="${k}" placeholder="${ph}">`;
+const cf=(k,t)=>`<h4>${t}</h4>${(p.cf[k]||[]).map((f,i)=>`<div class="lr"><b>${esc2(f.l)}</b><span class="meta">${f.t}</span><button type="button" class="x" data-cfdel="${k}:${i}">×</button></div>`).join("")}<div class="addcf"><input data-cfadd="${k}" placeholder="Nouveau champ"><select><option>texte</option><option>nombre</option><option>date</option></select></div>`;
+const st=(k,t,d)=>`<div class="step"><span>${t}<small>${d}</small></span><span class="sb"><button type="button" data-step="${k}:-1">−</button><b>${p[k]} j</b><button type="button" data-step="${k}:1">+</button></span></div>`;
+const seg=(k,o,cur)=>`<div class="seg">${o.map(([v,l])=>`<button type="button" class="${cur===v?"on":""}" data-seg="${k}:${v}">${l}</button>`).join("")}</div>`;
+let th="auto",bn="";try{th=localStorage.getItem(KEY+"-theme")||"auto";bn=localStorage.getItem(KEY+"-by")||""}catch(e){}
+const a=document.activeElement,inDrawer=a&&a.closest&&a.closest("#dSet")&&/INPUT|SELECT/.test(a.tagName);
+if(!inDrawer){
+$("#p_gen").innerHTML=`<label>Nom de la structure<input id="orgIn" value="${esc2(p.org)}"></label><label>Logo<span class="lg"><img id="logoPrev" alt="" ${p.logo?"":"hidden"} src="${esc2(p.logo||"")}"><input type="file" id="logoFile" accept="image/*"><button class="btn sm" type="button" id="logoDel">Retirer</button></span></label><h4>Thème de cet appareil</h4>${seg("theme",[["auto","Auto"],["light","Clair"],["dark","Sombre"]],th)}<label>Mon nom pour les contrôles<input id="byIn" value="${esc2(bn)}"></label>`;
+$("#p_mat").innerHTML=`<h4>Catégories de matériel</h4>${chips("cats","Ajouter une catégorie")}<h4>États du matériel</h4>${lv("states","Ajouter un état")}<h4>États des véhicules</h4>${lv("vstates","Ajouter un état")}${cf("items","Champs supplémentaires du matériel")}${cf("veh","Champs supplémentaires des véhicules")}${cf("radios","Champs supplémentaires des radios")}`;
+$("#p_ctl").innerHTML=`<h4>Checklist de vérification des radios</h4>${chips("checks","Ajouter un point de contrôle")}<h4>Délais</h4>${st("radioDays","Vérification des radios","tous les…")}${st("soon","Alerte radios","avant l'échéance")}${st("expDays","Alerte péremption","avant la date")}${st("lotWarn","Alerte contrôle de lot","avant l'échéance")}${st("vehDays","Alerte véhicules","contrôle technique et entretien")}${st("horizon","Échéancier","horizon affiché")}${st("lotFreq","Contrôle d'un lot par défaut","fréquence")}`;
+$("#eqTop").innerHTML=`<h4>Rôle des nouveaux arrivants</h4>${seg("defRole",[["lecteur","Lecteur"],["controleur","Contrôleur"],["gestionnaire","Gestionnaire"],["admin","Admin"]],p.defRole)}`}
+const sum={gen:p.org,mat:p.cats.length+" catégories · "+p.states.length+" états",ctl:p.checks.length+" points · radios tous les "+p.radioDays+" j",eq:"Rôle par défaut : "+p.defRole,data:"Sauvegarde, diagnostic, compte"};
+$("#setTiles").innerHTML=Object.entries(GRP).map(([k,[t,i]])=>`<button class="tileb" type="button" data-open="${k}">${TILE(i)}<b>${t}</b><span class="sm">${esc2(sum[k])}</span></button>`).join("")}
+const dS=$("#dSet");
+document.addEventListener("click",e=>{const o=e.target.closest("[data-open]");if(!o)return;const g=o.dataset.open;Object.keys(GRP).forEach(x=>$("#p_"+x).hidden=x!==g);$("#dSetT").textContent=GRP[g][0];dS.showModal()});
+dS.addEventListener("click",e=>{if(e.target===dS){dS.close();return}const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+if(d.ch){const l=P()[d.ch].slice();l.splice(+d.i,1);cfgSet({[d.ch]:l})}
+else if(d.step){const[k,s]=d.step.split(":"),mn=["radioDays","horizon","lotFreq"].includes(k)?1:0;cfgSet({[k]:Math.max(mn,P()[k]+ +s*(k==="radioDays"?5:1))})}
+else if(d.seg){const[k,v]=d.seg.split(":");if(k==="theme"){try{localStorage.setItem(KEY+"-theme",v)}catch(x){}render();toast()}else cfgSet({[k]:v})}
+else if(d.lv){const[k,i,v]=d.lv.split(":"),l=P()[k].map(x=>({...x}));l[+i].l=v;cfgSet({[k]:l})}
+else if(d.lvdel){const[k,i]=d.lvdel.split(":"),l=P()[k].slice();l.splice(+i,1);if(l.length)cfgSet({[k]:l})}
+else if(d.cfdel){const[k,i]=d.cfdel.split(":"),c=JSON.parse(JSON.stringify(P().cf));c[k].splice(+i,1);cfgSet({cf:c})}
+else if(b.id==="logoDel")cfgSet({logo:""});
+else if(b.id==="dSetX")dS.close()});
+dS.addEventListener("change",e=>{const t=e.target,d=t.dataset,v=(t.value||"").trim();
+if(d.chadd&&v){cfgSet({[d.chadd]:P()[d.chadd].concat(v)})}
+else if(d.lvadd&&v){cfgSet({[d.lvadd]:P()[d.lvadd].map(x=>({...x})).concat({n:v,l:"ok"})})}
+else if(d.cfadd&&v){const c=JSON.parse(JSON.stringify(P().cf));c[d.cfadd]=(c[d.cfadd]||[]).concat({k:slug(v),l:v,t:t.parentElement.querySelector("select").value});cfgSet({cf:c})}
+else if(t.id==="orgIn"&&v)cfgSet({org:v});
+else if(t.id==="byIn"){try{localStorage.setItem(KEY+"-by",v)}catch(x){}toast()}});
 const CFG=window.PC13||{};
 DL={save:({filename,data})=>{dl(filename,data);return Promise.resolve()}};
-function showLogin(sb){const d=document.createElement("div");d.id="login";d.style.cssText="position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;padding:16px";d.innerHTML=`<form style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;width:min(380px,100%);display:grid;gap:12px"><h2 style="margin:0">${esc(P().org)}</h2><p class="meta" style="margin:0">Connexion réservée à l'équipe</p><label>Email<input name="e" type="email" required autocomplete="username"></label><label>Mot de passe<input name="p" type="password" required autocomplete="current-password"></label><div id="lerr" style="color:var(--bad)"></div><button class="btn pri">Se connecter</button></form>`;document.body.appendChild(d);d.querySelector("form").onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){d.querySelector("#lerr").textContent="Connexion refusée : "+r.error.message;return}d.remove();start(sb,r.data.session)}}
+function showLogin(sb){const d=document.createElement("div");d.id="login";d.style.cssText="position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;padding:16px";d.innerHTML=`<form style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;width:min(380px,100%);display:grid;gap:12px">${EMBLEM}<h2 style="margin:0">${esc(P().org)}</h2><p class="meta" style="margin:0">Connexion réservée à l'équipe</p><label>Email<input name="e" type="email" required autocomplete="username"></label><label>Mot de passe<input name="p" type="password" required autocomplete="current-password"></label><div id="lerr" style="color:var(--bad)"></div><button class="btn pri">Se connecter</button></form>`;document.body.appendChild(d);d.querySelector("form").onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){d.querySelector("#lerr").textContent="Connexion refusée : "+r.error.message;return}d.remove();start(sb,r.data.session)}}
 async function start(sb,session){
 MY=(session.user.email||"").toLowerCase();USER={};OWNER=(CFG.admins||[]).map(x=>String(x).toLowerCase()).includes(MY);DB=sb;
 const ks=COLL.map(c=>c[0]);
@@ -405,7 +543,7 @@ const ck=await sb.from("checks").select("*").order("at",{ascending:true}).limit(
 document.body.classList.remove("locked");render();
 sb.channel("pc13").on("postgres_changes",{event:"*",schema:"public",table:"data"},p=>{if(p.new&&p.new.key)apply([p.new])}).on("postgres_changes",{event:"INSERT",schema:"public",table:"log"},p=>{const n=p.new;if(n&&!S.log.some(e=>e.at===n.at&&e.t===n.t)){S.log.push({at:n.at,by:n.by,t:n.t});logView()}}).on("postgres_changes",{event:"INSERT",schema:"public",table:"checks"},p=>{if(p.new&&!S.checks.some(c=>c.id===p.new.id)){S.checks.push(p.new);mergeChecks();prev=JSON.stringify(S);render()}}).subscribe(s=>{if(s==="SUBSCRIBED")setSync("ok","Synchronisé en équipe");else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT")setSync("err","Temps réel indisponible")});
 setSync("ok","Synchronisé en équipe");
-const o=document.createElement("button");o.className="btn sm";o.textContent="Se déconnecter";o.style.marginTop="12px";o.onclick=async()=>{await sb.auth.signOut();location.reload()};document.querySelector("header").appendChild(o);
+SB=sb;
 }
 (async()=>{
 if(!CFG.url||!CFG.key){setSync("err","Base non configurée : config.js manquant");return}
