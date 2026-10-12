@@ -5,5 +5,5 @@
 window.PC13 = {
   url: "https://xdjwnvtpgioevxslhxwt.supabase.co",
   key: "sb_publishable_5OGaTHD0y2VeRF7o5_yGQw_9HG_chGF",
-  admins: ["ton-email@exemple.fr"]
+  admins: ["brangerlukas8@gmail.com"]
 };
