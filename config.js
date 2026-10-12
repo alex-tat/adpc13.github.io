@@ -4,6 +4,6 @@
 // Ne mets JAMAIS la clé "service_role" ici, seulement la clé "anon public".
 window.PC13 = {
   url: "https://xdjwnvtpgioevxslhxwt.supabase.co",
-  key: "sb_secret_ryvqTZAeCCYP0XmyA-ib2g_qiq0UVQD",
+  key: "sb_publishable_5OGaTHD0y2VeRF7o5_yGQw_9HG_chGF",
   admins: ["brangerlukas8@gmail.com"]
 };
