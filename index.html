@@ -215,6 +215,386 @@ const CATS=["Radios et transmissions","Secourisme","Logistique","Véhicules","Si
 const CHECKS=["État extérieur (boîtier, écran, boutons, molette)","Antenne en bon état et bien vissée","Batterie : autonomie correcte, pas de gonflement","Clip ceinture et accessoires présents","Mise sous tension et affichage corrects","Test émission / réception sur un canal d'essai","Canaux et groupes programmés conformes","Chargeur et contacts de charge propres"];
 const KEY="pc13-materiel-v1";
 let S;
+function load(){return{radios:[],items:[],loans:[],lots:[],veh:[],tasks:[],cfg:[],roles:[],log:[],checks:[]}}
+function save(){diffLog();pushDb();prev=JSON.stringify(S)}
+S=load();S.loans=S.loans||[];S.lots=S.lots||[];S.veh=S.veh||[];S.tasks=S.tasks||[];S.log=S.log||[];S.cfg=S.cfg||[];S.roles=S.roles||[];let prev=JSON.stringify(S);Object.defineProperty(S,"nid",{get(){return Date.now()*1000+Math.floor(Math.random()*1000)},set(){}});
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+const fr=d=>d?new Date(d+"T00:00:00").toLocaleDateString("fr-FR"):"—";
+function due(r){if(!r.last)return null;const d=new Date(r.last+"T00:00:00");d.setDate(d.getDate()+P().radioDays);return d}
+function status(r){const d=due(r);if(!d)return{k:"none",t:"Jamais vérifiée",c:"t-n"};const days=Math.ceil((d-new Date())/864e5);
+ if(days<0)return{k:"late",t:"En retard de "+(-days)+" j",c:"t-bad"};if(days<=P().soon)return{k:"soon",t:"À vérifier dans "+days+" j",c:"t-warn"};return{k:"ok",t:"À jour",c:"t-ok"}}
+function home(){const c={late:0,soon:0,ok:0,none:0};S.radios.forEach(r=>c[status(r).k]++);
+ const bad=S.items.filter(i=>stLvl(i.state)==="problème").length;
+ const late=S.radios.filter(r=>["late","none"].includes(status(r).k));
+ $("#home").innerHTML=`${hero()}<div class="bar"><button class="btn" data-act="report">Télécharger le rapport</button><button class="btn" data-act="labels">Étiquettes QR des lots</button></div><div class="stats"><div class="stat"><b>${S.radios.length}</b><span>radios DP2400</span></div><div class="stat bad"><b>${c.late+c.none}</b><span>radios à vérifier maintenant</span></div><div class="stat warn"><b>${c.soon}</b><span>échéance sous 30 jours</span></div><div class="stat ok"><b>${c.ok}</b><span>radios à jour</span></div><div class="stat"><b>${S.items.reduce((a,i)=>a+(+i.qty||0),0)}</b><span>pièces de matériel</span></div><div class="stat ${bad?"bad":"ok"}"><b>${bad}</b><span>références à réparer ou hors service</span></div></div>
+ ${alerts()}${agenda()}<h2 style="margin-bottom:10px">Radios à vérifier en priorité</h2>${late.length?late.map(r=>radioRow(r)).join(""):'<div class="empty">Toutes les radios sont à jour.</div>'}`}
+function radioRow(r){const s=status(r),d=due(r);const h=(r.hist||[]).slice(-1)[0];
+ return`<div class="row"><div class="main"><h3>${esc(r.serial)} <span class="tag ${s.c}">${s.t}</span></h3><div class="meta">${esc(r.tag)} · ${esc(r.holder)||"Sans affectation"}</div><div class="meta">Dernière vérification : ${fr(r.last)} · Échéance : ${d?d.toLocaleDateString("fr-FR"):"—"}</div>${cfLine("radios",r)}${h?`<div class="hist">Dernier contrôle par ${esc(h.by)} : ${h.ok?"conforme":"non conforme"}${h.notes?" — "+esc(h.notes):""}</div>`:""}</div><div class="acts"><button class="btn pri sm" data-act="check" data-id="${r.id}">Vérifier</button><button class="btn sm hv" data-act="histR" data-id="${r.id}">Historique</button><button class="btn sm" data-act="editR" data-id="${r.id}">Modifier</button><button class="btn sm" data-act="delR" data-id="${r.id}">Supprimer</button></div></div>`}
+function radios(){const q=$("#rq").value.toLowerCase(),f=$("#rf").value;
+ const l=S.radios.filter(r=>(!q||(r.serial+r.tag+r.holder).toLowerCase().includes(q))&&(!f||status(r).k===f));
+ $("#rlist").innerHTML=l.length?l.map(radioRow).join(""):'<div class="empty">Aucune radio. Ajoutez la première avec le bouton ci-dessus.</div>'}
+function items(){const q=$("#iq").value.toLowerCase(),c=$("#ic").value;
+ const l=S.items.filter(i=>(!q||(i.name+i.loc+i.note).toLowerCase().includes(q))&&(!c||i.cat===c));
+ const tc=stClass();
+ $("#ilist").innerHTML=l.length?l.map(i=>`<div class="row"><div class="main"><h3>${esc(i.name)} <span class="tag ${tc[i.state]||"t-n"}">${esc(i.state)}</span></h3><div class="meta">${esc(i.cat)} · Quantité : ${esc(i.qty)} · ${esc(i.loc)||"Emplacement non précisé"}</div>${stockTags(i)}${cfLine("items",i)}${i.note?`<div class="hist">${esc(i.note)}</div>`:""}</div><div class="acts"><button class="btn sm" data-act="editI" data-id="${i.id}">Modifier</button><button class="btn sm" data-act="delI" data-id="${i.id}">Supprimer</button></div></div>`).join(""):'<div class="empty">Aucun matériel. Ajoutez une référence avec le bouton ci-dessus.</div>'}
+const dd=x=>Math.ceil((new Date(x+"T00:00:00")-new Date())/864e5);
+function stockTags(i){let t="";const m=+i.min;if(m&&+i.qty<=m)t+=` <span class="tag t-bad">Stock bas (mini ${m})</span>`;if(i.exp){const d=dd(i.exp);t+=d<0?` <span class="tag t-bad">Périmé</span>`:d<=P().expDays?` <span class="tag t-warn">Péremption dans ${d} j</span>`:""}return t?`<div style="margin-top:4px">${t}</div>`:""}
+function alerts(){const a=[];S.items.forEach(i=>{const m=+i.min;if(m&&+i.qty<=m)a.push(`Stock bas : ${esc(i.name)} (${esc(i.qty)} restant, mini ${m})`);if(i.exp){const d=dd(i.exp);if(d<0)a.push(`Périmé : ${esc(i.name)} (depuis le ${fr(i.exp)})`);else if(d<=P().expDays)a.push(`À renouveler sous ${d} j : ${esc(i.name)}`)}});S.lots.forEach(l=>{const s=lotSt(l);if(s.k!=="ok")a.push((s.k==="bad"?"🔴 ":"🟠 ")+"Lot "+esc(l.name)+" : "+esc(s.why))});S.veh.forEach(v=>{const s=vehSt(v);if(s.k!=="ok")a.push((s.k==="bad"?"🔴 ":"🟠 ")+"Véhicule "+esc(v.name)+" : "+esc(s.why))});S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).forEach(t=>a.push("Tâche en retard : "+esc(t.txt)));S.loans.filter(l=>!l.back&&l.due&&l.due<today()).forEach(l=>a.push(`Retour en retard : ${esc(l.what)} chez ${esc(l.who)} (prévu le ${fr(l.due)})`));return `<h2 style="margin-bottom:10px">Alertes</h2>`+(a.length?a.map(x=>`<div class="row"><div class="main">${x}</div></div>`).join(""):'<div class="empty">Aucune alerte de stock, de péremption ou de retour.</div>')+'<div style="height:22px"></div>'}
+function loans(){const l=S.loans.slice().sort((a,b)=>(a.back?1:0)-(b.back?1:0)||(a.due||"").localeCompare(b.due||""));$("#llist").innerHTML=l.length?l.map(x=>{const late=!x.back&&x.due&&x.due<today();return `<div class="row"><div class="main"><h3>${esc(x.what)} ×${esc(x.qty)} <span class="tag ${x.back?"t-ok":late?"t-bad":"t-warn"}">${x.back?"Rendu le "+fr(x.back):late?"En retard":"Sorti"}</span></h3><div class="meta">${esc(x.who)} · Sortie le ${fr(x.out)} · Retour prévu ${fr(x.due)}</div>${x.note?`<div class="hist">${esc(x.note)}</div>`:""}</div><div class="acts">${x.back?"":`<button class="btn pri sm" data-act="back" data-id="${x.id}">Marquer rendu</button>`}<button class="btn sm" data-act="delL" data-id="${x.id}">Supprimer</button></div></div>`}).join(""):'<div class="empty">Aucune sortie enregistrée. Utilisez le bouton ci-dessus quand du matériel quitte le stock.</div>'}
+$("#addLoan").onclick=()=>{if(!S.items.length){notify("Ajoutez d'abord du matériel.");return}$("#fLoan").reset();$("#lItem").innerHTML=S.items.map(i=>`<option value="${i.id}">${esc(i.name)} (${esc(i.qty)} en stock)</option>`).join("");$("#fLoan").out.value=today();$("#dLoan").showModal()};
+$("#fLoan").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const it=S.items.find(i=>i.id===+f.item.value);const q=+f.qty.value;it.qty=Math.max(0,(+it.qty||0)-q);S.loans.push({id:S.nid++,itemId:it.id,what:it.name,qty:q,who:f.who.value.trim(),out:f.out.value,due:f.due.value,note:f.note.value.trim(),back:""});save();render()};
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]");if(!b)return;const id=+b.dataset.id,x=S.loans.find(l=>l.id===id);if(b.dataset.act==="back"&&x){const it=S.items.find(i=>i.id===x.itemId);if(it)it.qty=(+it.qty||0)+x.qty;x.back=today();save();render()}if(b.dataset.act==="delL"&&await ask("Supprimer cette sortie ?")){S.loans=S.loans.filter(l=>l.id!==id);save();render()}});
+function csv(rows){const t=rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(";")).join("\n");if(DL){DL.save({filename:"export-pc13.csv",data:"\ufeff"+t}).catch(()=>{});return}try{navigator.clipboard.writeText(t).then(()=>notify("CSV copié : collez-le dans Excel ou un fichier texte."),()=>prompt("Copiez le CSV :",t))}catch(e){prompt("Copiez le CSV :",t)}}
+$("#csvItems").onclick=()=>csv([["Désignation","Catégorie","Quantité","État","Emplacement","Seuil mini","Péremption","Remarques",...P().cf.items.map(x=>x.l)]].concat(S.items.map(i=>[i.name,i.cat,i.qty,i.state,i.loc,i.min,i.exp,i.note,...P().cf.items.map(x=>(i.cf||{})[x.k]||"")])));
+$("#csvRadios").onclick=()=>csv([["N° série","Repère","Affectation","Dernière vérification","Échéance","Statut",...P().cf.radios.map(x=>x.l)]].concat(S.radios.map(r=>{const d=due(r);return[r.serial,r.tag,r.holder,r.last,d?ymd(d):"",status(r).t,...P().cf.radios.map(x=>(r.cf||{})[x.k]||"")]})));
+const lastDay=m=>{const[y,mo]=m.split("-").map(Number);return new Date(y,mo,0)};
+function lotSt(l){const r=[];(l.items||[]).forEach(i=>{if(i.exp){const d=Math.ceil((lastDay(i.exp)-new Date())/864e5);if(d<0)r.push([2,i.n+" périmé"]);else if(d<=P().expDays)r.push([1,i.n+" périme dans "+d+" j"])}});if(!l.last)r.push([1,"jamais contrôlé"]);else{const d=Math.ceil((new Date(l.last+"T00:00:00").getTime()+l.freq*864e5-Date.now())/864e5);if(d<0)r.push([2,"contrôle en retard de "+(-d)+" j"]);else if(d<=P().lotWarn)r.push([1,"contrôle à faire sous "+d+" j"])}const h=(l.hist||[]).slice(-1)[0];if(h&&!h.ok)r.push([2,"manque au dernier contrôle : "+h.missing.join(", ")]);const m=Math.max(0,...r.map(x=>x[0]));return{k:["ok","warn","bad"][m],why:r.map(x=>x[1]).join(" · ")||"Tout est conforme"}}
+function vehSt(v){let m=0,w=[];const sl=vLvl(v.state);if(sl!=="ok"){m=sl==="problème"?2:1;w.push((v.state||"").toLowerCase())}[["ct","contrôle technique"],["ent","entretien"]].forEach(([f,n])=>{if(v[f]){const d=dd(v[f]);if(d<0){m=2;w.push(n+" dépassé")}else if(d<=P().vehDays){m=Math.max(m,1);w.push(n+" dans "+d+" j")}}});return{k:["ok","warn","bad"][m],why:w.join(" · ")||"Disponible"}}
+function lots(){$("#lotlist").innerHTML=S.lots.length?S.lots.map(l=>{const s=lotSt(l),v=S.veh.find(x=>x.id===l.veh);return`<div class="row"><div class="main"><h3><span class="led ${s.k}"></span> ${esc(l.name)}</h3><div class="meta">${v?esc(v.name)+" · ":""}${(l.items||[]).length} articles · contrôle tous les ${l.freq} j · dernier : ${fr(l.last)}</div><div class="hist">${esc(s.why)}</div></div><div class="acts"><button class="btn pri sm" data-act="chkLot" data-id="${l.id}">Contrôler</button><button class="btn sm hv" data-act="histLot" data-id="${l.id}">Historique</button><button class="btn sm" data-act="qr" data-id="${l.id}">QR code</button><button class="btn sm" data-act="editLot" data-id="${l.id}">Modifier</button><button class="btn sm" data-act="delLot" data-id="${l.id}">Supprimer</button></div></div>`}).join(""):'<div class="empty">Aucun lot. Créez un sac ou un lot avec son contenu et ses dates de péremption.</div>'}
+function vehs(){$("#vlist").innerHTML=S.veh.length?S.veh.map(v=>{const s=vehSt(v),n=S.lots.filter(l=>l.veh===v.id).length;return`<div class="row"><div class="main"><h3><span class="led ${s.k}"></span> ${esc(v.name)} <span class="meta">${esc(v.plate)}</span></h3><div class="meta">Contrôle technique : ${fr(v.ct)} · Entretien : ${fr(v.ent)} · ${n} lot(s) lié(s)</div>${cfLine("veh",v)}<div class="hist">${esc(s.why)}${v.note?" — "+esc(v.note):""}</div></div><div class="acts"><button class="btn sm hv" data-act="qrv" data-id="${v.id}">QR code</button><button class="btn sm" data-act="editVeh" data-id="${v.id}">Modifier</button><button class="btn sm" data-act="delVeh" data-id="${v.id}">Supprimer</button></div></div>`}).join(""):'<div class="empty">Aucun véhicule. Ajoutez vos VPSP, VL et remorques.</div>'}
+function tasks(){const l=S.tasks.slice().sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(a.due||"9").localeCompare(b.due||"9"));$("#tlist").innerHTML=l.length?l.map(t=>`<div class="row"><div class="main"><h3 style="${t.done?"text-decoration:line-through;opacity:.6":""}">${esc(t.txt)}</h3><div class="meta">${esc(t.who)||"Non assignée"} · Échéance ${fr(t.due)}</div></div><div class="acts"><button class="btn sm" data-act="doneTask" data-id="${t.id}">${t.done?"Rouvrir":"Terminée"}</button><button class="btn sm" data-act="delTask" data-id="${t.id}">Supprimer</button></div></div>`).join(""):'<div class="empty">Aucune tâche. Assignez les actions à mener sur le matériel et les véhicules.</div>'}
+const cur={};
+function fillVeh(s){$("#vSel").innerHTML='<option value="">Aucun véhicule</option>'+S.veh.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join("");$("#vSel").value=s||""}
+const parse=t=>t.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{const p=s.split(";").map(x=>x.trim());const m=(p[2]||"").match(/^(\d{1,2})\/(\d{4})$/);return{n:p[0],qty:p[1]||"1",exp:m?m[2]+"-"+m[1].padStart(2,"0"):""}});
+$("#addLot").onclick=()=>{cur.lot=null;$("#fLot").reset();$("#dLotT").textContent="Ajouter un lot";fillVeh();$("#fLot").freq.value=P().lotFreq;$("#dLot").showModal()};
+$("#fLot").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const v={name:f.name.value.trim(),veh:+f.veh.value||"",freq:+f.freq.value||7,items:parse(f.items.value)};if(cur.lot)Object.assign(S.lots.find(l=>l.id===cur.lot),v);else S.lots.push({id:S.nid++,last:"",hist:[],...v});save();render()};
+function openCheck(id){const l=S.lots.find(x=>x.id===id);if(!l)return;cur.chk=id;$("#dChkT").textContent="Contrôle · "+l.name;$("#chkItems").innerHTML=(l.items||[]).map((i,k)=>{const d=i.exp?Math.ceil((lastDay(i.exp)-new Date())/864e5):null;return`<label class="chk"><input type="checkbox" id="k${k}" checked> ${esc(i.qty)} × ${esc(i.n)}${i.exp?` <span class="tag ${d<0?"t-bad":d<=P().expDays?"t-warn":"t-n"}">exp. ${i.exp.slice(5)}/${i.exp.slice(0,4)}</span>`:""}</label>`}).join("")||'<p class="meta">Ce lot est vide.</p>';$("#fChk").reset();try{$("#fChk").by.value=localStorage.getItem(KEY+"-by")||""}catch(x){}$("#dChk").showModal()}
+$("#fChk").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const l=S.lots.find(x=>x.id===cur.chk);const miss=l.items.filter((i,k)=>!document.querySelector("#k"+k).checked).map(i=>i.n);l.last=today();l.hist=(l.hist||[]).concat({date:today(),by:f.by.value.trim(),ok:!miss.length,missing:miss,notes:f.notes.value.trim()});try{localStorage.setItem(KEY+"-by",f.by.value)}catch(x){}save();render()};
+$("#addVeh").onclick=()=>{cur.veh=null;$("#fVeh").reset();$("#dVehT").textContent="Ajouter un véhicule";$("#dVeh").showModal()};
+$("#fVeh").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const v={name:f.name.value.trim(),plate:f.plate.value.trim(),ct:f.ct.value,ent:f.ent.value,state:f.state.value,note:f.note.value.trim(),cf:cfRead(f)};if(cur.veh)Object.assign(S.veh.find(x=>x.id===cur.veh),v);else S.veh.push({id:S.nid++,...v});save();render()};
+$("#addTask").onclick=()=>{$("#fTask").reset();$("#dTask").showModal()};
+$("#fTask").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;S.tasks.push({id:S.nid++,txt:f.txt.value.trim(),who:f.who.value.trim(),due:f.due.value,done:false});save();render()};
+$("#csvHist").onclick=()=>csv([["Date","Lot","Vérifié par","Conforme","Manquants","Remarques"]].concat(S.lots.flatMap(l=>(l.hist||[]).map(h=>[h.date,l.name,h.by,h.ok?"oui":"non",h.missing.join(", "),h.notes]))));
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]");if(!b)return;const id=+b.dataset.id,a=b.dataset.act;
+if(a==="chkLot")openCheck(id);
+if(a==="qr"){const l=S.lots.find(x=>x.id===id);const q=qrcode(0,"M");q.addData(BASE+"#lot-"+id);q.make();$("#qrT").textContent=l.name;$("#qrBox").innerHTML=q.createSvgTag({cellSize:6,margin:2});$("#dQR").showModal()}
+if(a==="editLot"){cur.lot=id;const l=S.lots.find(x=>x.id===id),f=$("#fLot");$("#dLotT").textContent="Modifier le lot";fillVeh(l.veh);f.name.value=l.name;f.freq.value=l.freq;f.items.value=(l.items||[]).map(i=>i.n+" ; "+i.qty+(i.exp?" ; "+i.exp.slice(5)+"/"+i.exp.slice(0,4):"")).join("\n");$("#dLot").showModal()}
+if(a==="delLot"&&await ask("Supprimer ce lot et son historique ?")){S.lots=S.lots.filter(l=>l.id!==id);save();render()}
+if(a==="editVeh"){cur.veh=id;$("#dVehT").textContent="Modifier le véhicule";fill($("#fVeh"),S.veh.find(v=>v.id===id));$("#dVeh").showModal()}
+if(a==="delVeh"&&await ask("Supprimer ce véhicule ?")){S.veh=S.veh.filter(v=>v.id!==id);S.lots.forEach(l=>{if(l.veh===id)l.veh=""});save();render()}
+if(a==="doneTask"){const t=S.tasks.find(x=>x.id===id);t.done=!t.done;save();render()}
+if(a==="delTask"){S.tasks=S.tasks.filter(x=>x.id!==id);save();render()}});
+if(location.hash.startsWith("#lot-"))openCheck(+location.hash.slice(5));
+const COLL=[["radios","Radio",r=>r.serial],["items","Matériel",i=>i.name],["loans","Sortie",l=>l.what+" → "+l.who],["lots","Lot",l=>l.name],["veh","Véhicule",v=>v.name],["tasks","Tâche",t=>t.txt],["cfg","Paramètres",c=>"configuration"],["roles","Rôle",r=>(NAMES[r.id]||"personne")+" → "+r.role]];
+const LBL={role:"rôle",cf:"champs personnalisés",vstates:"états des véhicules",defRole:"rôle par défaut",org:"nom de la structure",cats:"catégories",states:"états du matériel",checks:"checklist radio",radioDays:"période radio",soon:"alerte radio",expDays:"alerte péremption",lotWarn:"alerte lot",vehDays:"alerte véhicule",horizon:"horizon échéancier",lotFreq:"fréquence lot par défaut",name:"nom",cat:"catégorie",qty:"quantité",state:"état",loc:"emplacement",note:"remarques",min:"seuil",exp:"péremption",serial:"n° de série",tag:"repère",holder:"affectation",last:"dernière vérification",freq:"fréquence",items:"contenu",veh:"véhicule",plate:"immatriculation",ct:"contrôle technique",ent:"entretien",txt:"intitulé",who:"assigné à",due:"échéance",back:"retour",out:"sortie"};
+function diffLog(){const o=JSON.parse(prev),add=t=>{const e={at:new Date().toISOString(),t,by:MY};S.log.push(e);if(DB)DB.from("log").insert(e).then(r=>{if(r.error)dbErr(r.error)})};
+COLL.forEach(([k,lab,nm])=>{const oa=o[k]||[],na=S[k]||[];na.forEach(x=>{const y=oa.find(z=>z.id===x.id);if(!y)return add("Ajout · "+lab+" : "+nm(x));if(JSON.stringify(x)===JSON.stringify(y))return;const hn=(x.hist||[]).length,ho=(y.hist||[]).length;
+if(hn>ho){const h=x.hist[hn-1];add("Contrôle · "+lab+" "+nm(x)+" par "+h.by+" : "+(h.ok?"conforme":"non conforme"+(h.missing&&h.missing.length?" (manque : "+h.missing.join(", ")+")":"")))}
+else if(k==="loans"&&x.back&&!y.back)add("Retour · "+nm(x))
+else if(k==="tasks"&&x.done!==y.done)add("Modification · Tâche : "+nm(x)+" ("+(x.done?"terminée":"rouverte")+")")
+else{const f=Object.keys(x).filter(q=>q!=="hist"&&JSON.stringify(x[q])!==JSON.stringify(y[q])).map(q=>LBL[q]||q);add("Modification · "+lab+" : "+nm(x)+" ("+f.join(", ")+")")}});
+oa.forEach(y=>{if(!na.find(z=>z.id===y.id))add("Suppression · "+lab+" : "+nm(y))})});
+if(S.log.length>2000)S.log=S.log.slice(-2000)}
+function logView(){const q=$("#lgq").value.toLowerCase(),f=$("#lgf").value;const l=S.log.concat((S.checks||[]).map(c=>({at:c.at,by:"",t:"Contrôle QR · "+c.ref_name+" par "+c.by+" : "+(c.ok?"conforme":"non conforme"+((c.missing||[]).length?" (manque : "+c.missing.join(", ")+")":""))}))).sort((a,b)=>a.at.localeCompare(b.at)).reverse().filter(e=>(!f||e.t.includes(f))&&(!q||e.t.toLowerCase().includes(q)));$("#lglist").innerHTML=l.length?l.slice(0,300).map(e=>`<div class="row"><div class="main">${esc(e.t)}</div><div class="meta">${new Date(e.at).toLocaleString("fr-FR")}${e.by?" · "+esc(NAMES[e.by]||"équipe"):""}</div></div>`).join("")+(l.length>300?`<p class="meta">${l.length-300} entrées plus anciennes : utilisez la recherche ou le CSV.</p>`:""):'<div class="empty">Aucune action enregistrée pour le moment. Chaque ajout, modification, suppression, contrôle, sortie et retour apparaîtra ici.</div>'}
+$("#lgq").oninput=logView;$("#lgf").onchange=logView;
+$("#csvLog").onclick=()=>csv([["Date","Personne","Action"]].concat(S.log.map(e=>[new Date(e.at).toLocaleString("fr-FR"),NAMES[e.by]||"",e.t])));
+const DEF={org:"Matériel · Protection Civile 13",cats:CATS.slice(),states:[{n:"Bon",l:"ok"},{n:"À contrôler",l:"attention"},{n:"À réparer",l:"problème"},{n:"Hors service",l:"problème"}],checks:CHECKS.slice(),radioDays:365,soon:30,expDays:60,lotWarn:3,vehDays:30,horizon:90,lotFreq:7,defRole:"gestionnaire",vstates:[{n:"Disponible",l:"ok"},{n:"Immobilisé",l:"problème"}],cf:{items:[],veh:[],radios:[]}};
+function P(){return Object.assign({},DEF,(S.cfg||[])[0]||{})}
+function stLvl(n){const s=P().states.find(x=>x.n===n);return s?s.l:"ok"}
+function stClass(){return Object.fromEntries(P().states.map(s=>[s.n,s.l==="problème"?"t-bad":s.l==="attention"?"t-warn":"t-ok"]))}
+function applyCfg(){const p=P();cfgExtra(p);CATS.length=0;CATS.push(...p.cats);CHECKS.length=0;CHECKS.push(...p.checks);
+const ic=$("#ic"),cv=ic.value;ic.innerHTML='<option value="">Toutes les catégories</option>'+CATS.map(c=>`<option>${esc(c)}</option>`).join("");ic.value=cv;
+$("#catSel").innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+document.querySelector("#fItem [name=state]").innerHTML=p.states.map(s=>`<option>${esc(s.n)}</option>`).join("");
+document.querySelector("header h1").textContent=p.org;document.title=p.org;
+let t="auto";try{t=localStorage.getItem(KEY+"-theme")||"auto"}catch(e){}if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;
+const f=$("#fSet");if(document.activeElement.form!==f){f.org.value=p.org;f.cats.value=p.cats.join("\n");f.states.value=p.states.map(s=>s.n+" ; "+s.l).join("\n");f.checks.value=p.checks.join("\n");["radioDays","soon","expDays","lotWarn","vehDays","horizon","lotFreq"].forEach(k=>f[k].value=p[k]);f.theme.value=t;f.vstates.value=p.vstates.map(s=>s.n+" ; "+s.l).join("\n");f.defRole.value=p.defRole;f.cfItems.value=cfTxt(p.cf.items);f.cfVeh.value=cfTxt(p.cf.veh);f.cfRadios.value=cfTxt(p.cf.radios)}}
+$("#fSet").onsubmit=e=>{e.preventDefault();const f=e.target,L=t=>t.split("\n").map(s=>s.trim()).filter(Boolean);
+const st=L(f.states.value).map(s=>{const[n,l]=s.split(";").map(x=>x.trim());const lv=(l||"").toLowerCase();return{n,l:["ok","attention","problème"].includes(lv)?lv:"ok"}});
+const v={id:1,org:f.org.value.trim()||DEF.org,cats:L(f.cats.value),states:st.length?st:DEF.states,checks:L(f.checks.value),vstates:parseLv(f.vstates.value).length?parseLv(f.vstates.value):DEF.vstates,defRole:f.defRole.value,cf:{items:parseCf(f.cfItems.value),veh:parseCf(f.cfVeh.value),radios:parseCf(f.cfRadios.value)}};
+["radioDays","soon","expDays","lotWarn","vehDays","horizon","lotFreq"].forEach(k=>{const n=f[k].value===""?DEF[k]:+f[k].value;v[k]=Math.max(["radioDays","horizon","lotFreq"].includes(k)?1:0,n)});
+if(!v.cats.length)v.cats=DEF.cats;if(!v.checks.length)v.checks=DEF.checks;
+try{localStorage.setItem(KEY+"-theme",f.theme.value)}catch(x){}
+S.cfg=[v];save();render()};
+$("#setReset").onclick=async()=>{if(await ask("Rétablir tous les paramètres par défaut ?")){S.cfg=[];try{localStorage.removeItem(KEY+"-theme")}catch(e){}save();render()}};
+$("#setClean").onclick=async()=>{if(await ask("Supprimer les radios et le matériel d'exemple ?")){S.radios=S.radios.filter(r=>!/exemple/i.test(r.tag||""));S.items=S.items.filter(i=>!/exemple/i.test(i.name||""));save();render()}};
+const ROLES={lecteur:"Lecteur (lecture seule)",controleur:"Contrôleur (contrôles et sorties)",gestionnaire:"Gestionnaire (saisie)",admin:"Administrateur"};
+function myRole(){if(!DB||!USER||OWNER)return"admin";const r=S.roles.find(x=>x.id===MY);return r?r.role:P().defRole}
+function vLvl(n){const s=P().vstates.find(x=>x.n===n);return s?s.l:"ok"}
+function cfRead(f){const o={};for(const el of f.elements)if(el.name&&el.name.startsWith("cf_")&&el.value!=="")o[el.name.slice(3)]=el.value;return o}
+function cfLine(k,o){const t=(P().cf[k]||[]).filter(f=>(o.cf||{})[f.k]).map(f=>esc(f.l)+" : "+esc(f.t==="date"?fr(o.cf[f.k]):o.cf[f.k])).join(" · ");return t?`<div class="hist">${t}</div>`:""}
+function cfTxt(a){return(a||[]).map(x=>x.l+" ; "+x.t).join("\n")}
+function parseCf(t){return t.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{const[l,ty]=s.split(";").map(x=>x.trim());return{k:l.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||"champ",l,t:["texte","nombre","date"].includes((ty||"").toLowerCase())?ty.toLowerCase():"texte"}})}
+function parseLv(t){return t.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{const[n,l]=s.split(";").map(x=>x.trim());const lv=(l||"").toLowerCase();return{n,l:["ok","attention","problème"].includes(lv)?lv:"ok"}})}
+function cfgExtra(p){document.body.dataset.role=myRole();const vs=document.querySelector("#fVeh [name=state]"),vh=p.vstates.map(s=>`<option>${esc(s.n)}</option>`).join("");if(vs.dataset.sig!==vh){vs.innerHTML=vh;vs.dataset.sig=vh}
+[["#fRadio","radios"],["#fItem","items"],["#fVeh","veh"]].forEach(([id,key])=>{const form=document.querySelector(id);let c=form.querySelector(".cfx");if(!c){c=document.createElement("div");c.className="cfx";c.style.cssText="display:grid;gap:12px";form.insertBefore(c,form.lastElementChild)}const h=(p.cf[key]||[]).map(x=>`<label>${esc(x.l)}<input name="cf_${x.k}" type="${x.t==="nombre"?"number":x.t==="date"?"date":"text"}"></label>`).join("");if(c.dataset.sig!==h){c.innerHTML=h;c.dataset.sig=h}});
+if(document.activeElement.id!=="rsearch")rolesView()}
+async function names(){if(!USER)return;const ids=[...new Set([...S.roles.map(r=>r.id),...S.log.map(e=>e.by)].filter(Boolean))];try{const ps=await USER.profiles(ids);ids.forEach(i=>NAMES[i]=(ps[i]&&ps[i].name)||NAMES[i]||"")}catch(e){}}
+function rolesView(){const b=$("#roleBox");if(myRole()!=="admin"||!USER){b.innerHTML="";return}b.innerHTML=`<h3>Équipe et rôles</h3><p class="meta">Les administrateurs sont ceux listés dans config.js. Les rôles masquent des boutons ; l'accès aux données est protégé par la connexion de chaque personne.</p>`+S.roles.map(r=>`<div class="row"><div class="main">${esc(r.id)}</div><select data-role-id="${esc(r.id)}">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===r.role?" selected":""}>${v}</option>`).join("")}</select><button class="btn sm" data-rdel="${esc(r.id)}">Retirer</button></div>`).join("")+`<div style="display:flex;gap:8px"><input id="rsearch" type="email" placeholder="Email de la personne à ajouter" style="flex:1"><button class="btn pri" id="radd">Ajouter</button></div>`}
+document.addEventListener("click",e=>{if(e.target.id!=="radd")return;const v=$("#rsearch").value.trim().toLowerCase();if(!v||S.roles.some(r=>r.id===v))return;S.roles.push({id:v,role:P().defRole});save();render()});
+document.addEventListener("change",e=>{const s=e.target.closest("[data-role-id]");if(!s)return;const r=S.roles.find(x=>x.id===s.dataset.roleId);if(r){r.role=s.value;save();render()}});
+document.addEventListener("click",async e=>{const a=e.target.closest("[data-radd]"),d=e.target.closest("[data-rdel]");if(a){NAMES[a.dataset.radd]=a.dataset.n;S.roles.push({id:a.dataset.radd,role:P().defRole});save();render()}if(d){S.roles=S.roles.filter(x=>x.id!==d.dataset.rdel);save();render()}});
+const BASE=location.origin+location.pathname;
+const TPL={h:{n:"Hygiène ambulance (quotidien)",f:1,i:"Désinfection de la cellule sanitaire ; 1\nNettoyage et désinfection du brancard ; 1\nDésinfection des surfaces de contact (poignées, volant) ; 1\nVidage des déchets ; 1\nLinge propre en place ; 1\nNettoyage du sol ; 1"},r:{n:"Radios et chargeurs",f:7,i:"Batteries chargées ; 1\nAntennes en place ; 1\nChargeurs complets ; 1"},v:{n:"Véhicule : contrôle de départ",f:7,i:"Niveaux (huile, lave-glace, refroidissement) ; 1\nPression des pneus ; 1\nÉclairage et signalisation ; 1\nCarburant suffisant ; 1\nDocuments de bord ; 1\nGilets et triangle ; 1"}};
+document.addEventListener("change",e=>{if(e.target.id!=="tpl"||!TPL[e.target.value])return;const t=TPL[e.target.value],f=$("#fLot");f.name.value=t.n;f.freq.value=t.f;f.items.value=t.i});
+$("#bulkRadios").onclick=()=>{$("#fBulk").reset();$("#dBulk").showModal()};
+$("#fBulk").onsubmit=e=>{if(e.submitter?.value!=="ok")return;e.target.list.value.split("\n").map(s=>s.trim()).filter(Boolean).forEach(s=>{const[a,b,c]=s.split(";").map(x=>x.trim());S.radios.push({id:S.nid++,serial:a,tag:b||"",holder:c||"",last:"",hist:[],cf:{}})});save();render()};
+$("#bkSave").onclick=()=>{const o={};COLL.forEach(([k])=>o[k]=S[k]||[]);o.exportedAt=new Date().toISOString();const data=JSON.stringify(o,null,1);if(DL)DL.save({filename:"sauvegarde-pc13-"+today()+".json",data}).catch(()=>notify("Téléchargement refusé."));else notify("Le téléchargement n'est pas disponible ici.")};
+$("#bkLoad").onchange=e=>{const fl=e.target.files[0];if(!fl)return;fl.text().then(async t=>{try{const o=JSON.parse(t);if(!await ask("Remplacer toutes les données actuelles par cette sauvegarde ?"))return;COLL.forEach(([k])=>{if(Array.isArray(o[k]))S[k]=o[k]});save();render()}catch(x){notify("Fichier de sauvegarde illisible.")}e.target.value=""})};
+function dl(name,data){const b=new Blob([data],{type:"text/plain;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+function report(){const E=esc,rows=(h,a)=>`<h2>${h}</h2>`+(a.length?`<table>${a.map(r=>`<tr>${r.map(c=>`<td>${E(c)}</td>`).join("")}</tr>`).join("")}</table>`:"<p>Rien à signaler.</p>");
+const rd=S.radios.map(r=>[r.serial,r.tag,r.holder,fr(r.last),status(r).t]),lo=S.lots.map(l=>{const s=lotSt(l);return[l.name,s.k==="ok"?"Conforme":s.k==="warn"?"Attention":"Problème",s.why,fr(l.last)]}),ve=S.veh.map(v=>[v.name,v.plate,fr(v.ct),fr(v.ent),vehSt(v).why]),it=S.items.map(i=>[i.name,i.cat,i.qty,i.state,i.loc,i.exp||"",+i.min&&+i.qty<=+i.min?"STOCK BAS":""]),lt=S.loans.filter(l=>!l.back).map(l=>[l.what,l.qty,l.who,fr(l.out),fr(l.due)]);
+dl("rapport-pc13-"+today()+".html",`<!doctype html><meta charset="utf-8"><title>Rapport</title><style>body{font:14px Arial;margin:24px}table{border-collapse:collapse;width:100%}td{border:1px solid #bbb;padding:4px 8px}h1{color:#0b2a5b}h2{margin-top:22px}</style><h1>${E(P().org)}</h1><p>Rapport du ${new Date().toLocaleDateString("fr-FR")}</p>`+rows("Radios",rd)+rows("Lots et sacs",lo)+rows("Véhicules",ve)+rows("Matériel",it)+rows("Sorties en cours",lt))}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]");if(!b)return;if(b.dataset.act==="report")report();if(b.dataset.act==="labels")labels()});
+let CAL=new Date();CAL.setDate(1);
+function events(){const e=[],add=(d,t)=>{if(d)e.push([d,t])};S.veh.forEach(v=>{add(v.ct,"CT · "+v.name);add(v.ent,"Entretien · "+v.name)});S.tasks.filter(t=>!t.done).forEach(t=>add(t.due,"Tâche · "+t.txt));S.loans.filter(l=>!l.back).forEach(l=>add(l.due,"Retour · "+l.what));S.radios.forEach(r=>{const d=due(r);if(d)add(ymd(d),"Radio · "+r.serial)});S.items.forEach(i=>add(i.exp,"Péremption · "+i.name));S.lots.forEach(l=>{if(l.last)add(ymd(new Date(new Date(l.last+"T00:00:00").getTime()+l.freq*864e5)),"Contrôle · "+l.name);(l.items||[]).forEach(i=>{if(i.exp)add(ymd(lastDay(i.exp)),"Péremption · "+i.n+" ("+l.name+")")})});return e}
+function calView(){const y=CAL.getFullYear(),m=CAL.getMonth(),ev=events(),first=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),p=y+"-"+String(m+1).padStart(2,"0");let h=`<div class="bar"><button class="btn" data-cal="-1">Mois précédent</button><b style="align-self:center;flex:1;text-align:center">${CAL.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</b><button class="btn" data-cal="1">Mois suivant</button></div><div class="cal">`;["L","M","M","J","V","S","D"].forEach(x=>h+=`<div class="ch">${x}</div>`);for(let i=0;i<first;i++)h+="<div></div>";for(let d=1;d<=n;d++){const k=p+"-"+String(d).padStart(2,"0"),l=ev.filter(x=>x[0]===k);h+=`<div class="cd${k===today()?" td":""}"><b>${d}</b>${l.slice(0,2).map(x=>`<div class="ce${k<today()?" ov":""}">${esc(x[1])}</div>`).join("")}${l.length>2?`<div class="ce">+${l.length-2}</div>`:""}</div>`}h+="</div>";const mo=ev.filter(x=>x[0].startsWith(p)).sort((a,b)=>a[0].localeCompare(b[0]));h+=mo.length?mo.map(x=>`<div class="row"><div class="main">${esc(x[1])}</div><div class="meta">${fr(x[0])}${x[0]<today()?" · dépassée":""}</div></div>`).join(""):'<div class="empty">Aucune échéance ce mois-ci.</div>';$("#callist").innerHTML=h}
+function badges(){const c={lots:S.lots.filter(l=>lotSt(l).k==="bad").length,veh:S.veh.filter(v=>vehSt(v).k==="bad").length,radios:S.radios.filter(r=>status(r).k==="late").length,loans:S.loans.filter(l=>!l.back&&l.due&&l.due<today()).length,tasks:S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).length,items:S.items.filter(i=>(+i.min&&+i.qty<=+i.min)||(i.exp&&dd(i.exp)<0)||stLvl(i.state)==="problème").length};document.querySelectorAll("nav button").forEach(b=>{if(!b.dataset.l)b.dataset.l=b.textContent;const n=c[b.dataset.tab]||0;b.innerHTML=esc(b.dataset.l)+(n?` <span class="tag t-bad">${n}</span>`:"")})}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-cal]");if(b){CAL.setMonth(CAL.getMonth()+ +b.dataset.cal);calView()}const a=e.target.closest("[data-act]");if(!a||(a.dataset.act!=="histLot"&&a.dataset.act!=="histR"))return;const o=(a.dataset.act==="histLot"?S.lots:S.radios).find(x=>x.id===+a.dataset.id);if(!o)return;$("#hT").textContent="Historique · "+(o.name||o.serial);const h=(o.hist||[]).slice().reverse();$("#hBody").innerHTML=h.length?h.map(x=>`<div class="row"><div class="main"><span class="tag ${x.ok?"t-ok":"t-bad"}">${x.ok?"Conforme":"Non conforme"}</span> ${fr(x.date)} · ${esc(x.by)}${x.missing&&x.missing.length?`<div class="hist">Manque : ${esc(x.missing.join(", "))}</div>`:""}${x.failed&&x.failed.length?`<div class="hist">Points en défaut : ${esc(x.failed.join(", "))}</div>`:""}${x.notes?`<div class="hist">${esc(x.notes)}</div>`:""}</div></div>`).join(""):'<div class="empty">Aucun contrôle enregistré.</div>';$("#dHist").showModal()});
+function health(){const od=x=>!x.back&&x.due&&x.due<today();return S.lots.filter(l=>lotSt(l).k!=="ok").length+S.veh.filter(v=>vehSt(v).k!=="ok").length+S.radios.filter(r=>["late","none"].includes(status(r).k)).length+S.loans.filter(od).length+S.tasks.filter(t=>!t.done&&t.due&&t.due<today()).length+S.items.filter(i=>(+i.min&&+i.qty<=+i.min)||(i.exp&&dd(i.exp)<0)||stLvl(i.state)==="problème").length}
+function hero(){const n=health();return `<div class="hero${n?" bad":""}"><span class="led${n?" bad":""}"></span><div><b>${n?n+(n>1?" points à traiter":" point à traiter"):"Tout est en ordre"}</b><span>${n?"Consulte les alertes ci-dessous":"Aucune alerte en cours"}</span></div></div>`}
+function render(){[applyCfg,badges,calView,home,lots,vehs,tasks,radios,items,loans,logView].forEach(f=>{try{f()}catch(e){showErr(e)}})}
+// tabs
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));["home","lots","veh","tasks","cal","radios","items","loans","log","set"].forEach(t=>$("#"+t).hidden=t!==b.dataset.tab)});
+$("#rq").oninput=radios;$("#rf").onchange=radios;$("#iq").oninput=items;$("#ic").onchange=items;
+$("#ic").innerHTML='<option value="">Toutes les catégories</option>'+CATS.map(c=>`<option>${c}</option>`).join("");
+$("#catSel").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+let editing=null;
+function fill(form,o){for(const el of form.elements)if(el.name&&!el.name.startsWith("cf_"))el.value=o[el.name]??"";for(const el of form.elements)if(el.name&&el.name.startsWith("cf_"))el.value=(o.cf||{})[el.name.slice(3)]??""}
+$("#addRadio").onclick=()=>{editing=null;$("#dRadioT").textContent="Ajouter une radio";$("#fRadio").reset();$("#dRadio").showModal()};
+$("#addItem").onclick=()=>{editing=null;$("#dItemT").textContent="Ajouter un matériel";$("#fItem").reset();$("#dItem").showModal()};
+$("#fRadio").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const v={serial:f.serial.value.trim(),tag:f.tag.value.trim(),holder:f.holder.value.trim(),last:f.last.value,cf:cfRead(f)};
+ if(editing)Object.assign(S.radios.find(r=>r.id===editing),v);else S.radios.push({id:S.nid++,hist:[],...v});save();render()};
+$("#fItem").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const v={name:f.name.value.trim(),cat:f.cat.value,qty:f.qty.value,state:f.state.value,loc:f.loc.value.trim(),note:f.note.value.trim(),min:f.min.value,exp:f.exp.value,cf:cfRead(f)};
+ if(editing)Object.assign(S.items.find(i=>i.id===editing),v);else S.items.push({id:S.nid++,...v});save();render()};
+$("#fCheck").onsubmit=e=>{const f=e.target;if(e.submitter?.value!=="ok")return;const r=S.radios.find(x=>x.id===editing);
+ const res=CHECKS.map((c,i)=>document.querySelector("#c"+i).checked);const ok=res.every(Boolean);
+ r.last=f.date.value;r.hist=(r.hist||[]).concat({date:f.date.value,by:f.by.value.trim(),ok,notes:f.notes.value.trim(),failed:CHECKS.filter((c,i)=>!res[i])});save();render()};
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]");if(!b)return;const id=+b.dataset.id,a=b.dataset.act;
+ if(a==="check"){editing=id;const r=S.radios.find(x=>x.id===id);$("#dCheckT").textContent="Vérification · "+r.serial;
+  $("#checks").innerHTML=CHECKS.map((c,i)=>`<label class="chk"><input type="checkbox" id="c${i}" checked> ${c}</label>`).join("");
+  $("#fCheck").reset();$("#fCheck").date.value=today();const by=(()=>{try{return localStorage.getItem(KEY+"-by")||""}catch(x){return""}})();$("#fCheck").by.value=by;$("#dCheck").showModal()}
+ if(a==="editR"){editing=id;$("#dRadioT").textContent="Modifier la radio";fill($("#fRadio"),S.radios.find(r=>r.id===id));$("#dRadio").showModal()}
+ if(a==="editI"){editing=id;$("#dItemT").textContent="Modifier le matériel";fill($("#fItem"),S.items.find(r=>r.id===id));$("#dItem").showModal()}
+ if(a==="delR"&&await ask("Supprimer cette radio ?")){S.radios=S.radios.filter(r=>r.id!==id);save();render()}
+ if(a==="delI"&&await ask("Supprimer ce matériel ?")){S.items=S.items.filter(r=>r.id!==id);save();render()}});
+$("#fCheck").addEventListener("submit",e=>{try{localStorage.setItem(KEY+"-by",e.target.by.value)}catch(x){}});
+const NAMES=new Proxy({},{get:(t,k)=>k==="undefined"||k==="null"?"":k,set:()=>true});let MY="",DB=null,DL=null,USER=null,OWNER=false,LASTERR="",ALERTED=false;
+function setSync(k,t){const s=$("#sync");s.textContent=t;s.className="tag "+(k==="ok"?"t-ok":k==="err"?"t-bad":"t-n")}
+function dbErr(e){LASTERR=e&&e.code?e.code+" : "+(e.message||""):String(e);setSync("err","Erreur de synchronisation");if(!ALERTED){ALERTED=true;notify("L'enregistrement en équipe a échoué ("+LASTERR+"). Touche le badge en haut pour le diagnostic.")}}
+async function diag(){let cw=null;try{cw=USER?await USER.can("data.write"):null}catch(e){}notify(["Base partagée : "+(DB?"connectée":"non connectée"),"Compte : "+(MY?"identifié":"non identifié"),"Propriétaire : "+(OWNER?"oui":"non"),"Rôle appliqué : "+myRole(),"Droit d'écriture : "+(cw===null?"inconnu":cw?"oui":"non"),"Dernière erreur : "+(LASTERR||"aucune")].join("\n"))}
+$("#sync").onclick=diag;
+const ymd=d=>new Date(d.getTime()+432e5).toISOString().slice(0,10);
+function pushDb(){if(!DB)return;const o=JSON.parse(prev);COLL.forEach(([k])=>{if(JSON.stringify(o[k]||[])!==JSON.stringify(S[k]||[]))DB.from("data").upsert({key:k,list:S[k]||[],updated_at:new Date().toISOString()}).then(r=>{if(r.error)dbErr(r.error)})})}
+function agenda(){const e=[],add=(d,t)=>{if(d&&dd(d)<=P().horizon)e.push([d,t])};S.veh.forEach(v=>{add(v.ct,"Contrôle technique · "+v.name);add(v.ent,"Entretien · "+v.name)});S.tasks.filter(t=>!t.done).forEach(t=>add(t.due,"Tâche · "+t.txt));S.loans.filter(l=>!l.back).forEach(l=>add(l.due,"Retour de "+l.what+" · "+l.who));S.radios.forEach(r=>{const d=due(r);if(d)add(ymd(d),"Vérification radio · "+r.serial)});S.lots.forEach(l=>{if(l.last)add(ymd(new Date(new Date(l.last+"T00:00:00").getTime()+l.freq*864e5)),"Contrôle du lot · "+l.name)});e.sort((a,b)=>a[0].localeCompare(b[0]));return `<h2 style="margin-bottom:10px">Échéancier (${P().horizon} jours)</h2>`+(e.length?e.slice(0,25).map(([d,t])=>`<div class="row"><div class="main">${esc(t)}</div><div class="meta">${fr(d)}${dd(d)<0?" · dépassée":""}</div></div>`).join(""):'<div class="empty">Aucune échéance à venir.</div>')+'<div style="height:22px"></div>'}
+render();
+function mergeChecks(){(S.lots||[]).forEach(l=>{const cs=(S.checks||[]).filter(c=>String(c.ref_id)===String(l.id));if(!cs.length)return;const add=cs.map(c=>({cid:c.id,date:String(c.at).slice(0,10),by:c.by+" (QR)",ok:c.ok,missing:c.missing||[],notes:c.notes||""}));l.hist=(l.hist||[]).filter(x=>!x.cid).concat(add);const last=add.map(a=>a.date).sort().pop();if(!l.last||last>l.last)l.last=last})}
+document.addEventListener("click",e=>{const b=e.target.closest('[data-act="qrv"]');if(!b)return;const v=S.veh.find(x=>x.id===+b.dataset.id);if(!v)return;const q=qrcode(0,"M");q.addData(BASE+"#veh-"+v.id);q.make();$("#qrT").textContent=v.name;$("#qrBox").innerHTML=q.createSvgTag({cellSize:6,margin:2});$("#dQR").showModal()});
+function labels(){const it=S.lots.map(l=>[l.name,"#lot-"+l.id]).concat(S.veh.map(v=>[v.name+" (véhicule)","#veh-"+v.id]));if(!it.length){notify("Aucun lot ni véhicule.");return}const c=it.map(([n,hs])=>{const q=qrcode(0,"M");q.addData(BASE+hs);q.make();return`<div class="c">${q.createSvgTag({cellSize:4,margin:1})}<b>${esc(n)}</b></div>`}).join("");dl("etiquettes-qr-pc13.html",`<!doctype html><meta charset="utf-8"><title>Étiquettes</title><style>body{font:13px Arial}.c{display:inline-block;width:200px;margin:8px;padding:8px;border:1px dashed #999;text-align:center;page-break-inside:avoid}svg{width:150px;height:150px}</style>${c}`)}
+async function publicCheck(sb,kind,id,sess){const d=document.createElement("div");d.id="pub";d.style.cssText="position:fixed;inset:0;overflow:auto;background:var(--bg);z-index:60;padding:16px";document.body.appendChild(d);d.innerHTML='<p class="meta" style="text-align:center">Chargement…</p>';
+const r=await sb.rpc("public_target",{p_kind:kind,p_id:id});
+if(r.error||!r.data){d.innerHTML='<div style="max-width:560px;margin:auto"><h2>Contrôle indisponible</h2><p class="meta">Ce QR code n\'est plus valide ou la base est injoignable.</p></div>';return}
+const t=r.data,lots=t.lots||[];let nm="";try{nm=localStorage.getItem(KEY+"-by")||""}catch(e){}if(!nm&&sess)nm=sess.user.email||"";
+d.innerHTML=`<div style="max-width:560px;margin:auto;display:grid;gap:14px"><h2 style="margin:0">${esc(t.name)}</h2>`+(lots.length?lots.map((l,i)=>`<form data-i="${i}" class="row" style="display:grid;gap:10px"><h3>${esc(l.name)}</h3>${(l.items||[]).map((x,k)=>`<label class="chk"><input type="checkbox" checked data-k="${k}"> ${esc(x.qty)} × ${esc(x.n)}${x.exp?` <span class="tag t-n">exp. ${esc(String(x.exp).slice(5))}/${esc(String(x.exp).slice(0,4))}</span>`:""}</label>`).join("")}<label>Votre nom<input name="by" required value="${esc(nm)}"></label><label>Remarques<input name="notes"></label><button class="btn pri">Valider le contrôle</button></form>`).join(""):'<p class="meta">Aucun lot rattaché à ce véhicule.</p>')+(sess?'<a href="'+esc(BASE)+'">Ouvrir l\'application</a>':'')+'</div>';
+d.querySelectorAll("form").forEach(f=>{f.onsubmit=async ev=>{ev.preventDefault();const l=lots[+f.dataset.i],miss=(l.items||[]).filter((x,k)=>!f.querySelector('[data-k="'+k+'"]').checked).map(x=>x.n),by=f.elements.by.value.trim();try{localStorage.setItem(KEY+"-by",by)}catch(e){}
+const q=await sb.from("checks").insert({kind:"lot",ref_id:String(l.id),ref_name:l.name,by,ok:!miss.length,missing:miss,notes:f.elements.notes.value.trim()});
+f.innerHTML=q.error?'<p style="color:var(--bad)">Échec de l\'enregistrement : '+esc(q.error.message)+'</p>':'<h3>✓ Contrôle enregistré</h3><p class="meta">'+(miss.length?"Manque signalé : "+esc(miss.join(", ")):"Tout est conforme.")+'</p>'}})}
+const CFG=window.PC13||{};
+DL={save:({filename,data})=>{dl(filename,data);return Promise.resolve()}};
+function showLogin(sb){const d=document.createElement("div");d.id="login";d.style.cssText="position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;padding:16px";d.innerHTML=`<form style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;width:min(380px,100%);display:grid;gap:12px"><h2 style="margin:0">${esc(P().org)}</h2><p class="meta" style="margin:0">Connexion réservée à l'équipe</p><label>Email<input name="e" type="email" required autocomplete="username"></label><label>Mot de passe<input name="p" type="password" required autocomplete="current-password"></label><div id="lerr" style="color:var(--bad)"></div><button class="btn pri">Se connecter</button></form>`;document.body.appendChild(d);d.querySelector("form").onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){d.querySelector("#lerr").textContent="Connexion refusée : "+r.error.message;return}d.remove();start(sb,r.data.session)}}
+async function start(sb,session){
+MY=(session.user.email||"").toLowerCase();USER={};OWNER=(CFG.admins||[]).map(x=>String(x).toLowerCase()).includes(MY);DB=sb;
+const ks=COLL.map(c=>c[0]);
+const apply=rows=>{rows.forEach(r=>{if(ks.includes(r.key))S[r.key]=r.list||[]});mergeChecks();prev=JSON.stringify(S);render()};
+const a=await sb.from("data").select("key,list");if(a.error){dbErr(a.error);return}apply(a.data||[]);
+const l=await sb.from("log").select("at,by,t").order("at",{ascending:false}).limit(500);S.log=(l.data||[]).reverse();
+const ck=await sb.from("checks").select("*").order("at",{ascending:true}).limit(2000);S.checks=ck.data||[];mergeChecks();prev=JSON.stringify(S);
+document.body.classList.remove("locked");render();
+sb.channel("pc13").on("postgres_changes",{event:"*",schema:"public",table:"data"},p=>{if(p.new&&p.new.key)apply([p.new])}).on("postgres_changes",{event:"INSERT",schema:"public",table:"log"},p=>{const n=p.new;if(n&&!S.log.some(e=>e.at===n.at&&e.t===n.t)){S.log.push({at:n.at,by:n.by,t:n.t});logView()}}).on("postgres_changes",{event:"INSERT",schema:"public",table:"checks"},p=>{if(p.new&&!S.checks.some(c=>c.id===p.new.id)){S.checks.push(p.new);mergeChecks();prev=JSON.stringify(S);render()}}).subscribe(s=>{if(s==="SUBSCRIBED")setSync("ok","Synchronisé en équipe");else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT")setSync("err","Temps réel indisponible")});
+setSync("ok","Synchronisé en équipe");
+const o=document.createElement("button");o.className="btn sm";o.textContent="Se déconnecter";o.style.marginTop="12px";o.onclick=async()=>{await sb.auth.signOut();location.reload()};document.querySelector("header").appendChild(o);
+}
+(async()=>{
+if(!CFG.url||!CFG.key){setSync("err","Base non configurée : config.js manquant");return}
+document.body.classList.add("locked");
+try{const sb=supabase.createClient(CFG.url,CFG.key);const r=await sb.auth.getSession(),sess=r.data&&r.data.session,hm=location.hash.match(/^#(lot|veh)-(\d+)$/);if(hm)publicCheck(sb,hm[1],hm[2],sess);else if(sess)start(sb,sess);else showLogin(sb)}catch(e){showErr(e)}
+})();
+</script>
+</body>
+</html>.btn:focus-visible,input:focus-visible,select:focus-visible,nav button:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.row .main{flex:1 1 220px;min-width:0}
+.row h3{font-size:1.05rem}
+.meta{color:var(--mute);font-size:.88rem}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.8rem;font-weight:600}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}.t-n{background:var(--line);color:var(--mute)}
+.empty{text-align:center;color:var(--mute);padding:30px 10px;border:2px dashed var(--line);border-radius:8px}
+dialog{border:0;border-radius:10px;padding:0;width:min(520px,94vw);background:var(--card);color:var(--ink);max-height:90vh}
+dialog::backdrop{background:rgba(5,12,30,.6)}
+dialog form{padding:18px;display:grid;gap:12px}
+label{display:grid;gap:4px;font-weight:600;font-size:.9rem}
+.chk{display:flex;gap:10px;align-items:center;font-weight:400;padding:6px 0;border-bottom:1px solid var(--line)}
+.chk input{width:20px;height:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hist{font-size:.85rem;color:var(--mute);margin-top:6px}
+.note{font-size:.85rem;color:var(--mute);margin-top:16px}
+.led{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-1px;background:var(--ok)}.led.warn{background:#f2a21b}.led.bad{background:var(--bad)}#qrBox svg{width:220px;height:220px;max-width:100%}
+[data-role="lecteur"] #bulkRadios,[data-role="controleur"] #bulkRadios,[data-role="lecteur"] .bar .btn.pri,[data-role="lecteur"] .acts .btn:not(.hv),[data-role="controleur"] .bar .btn.pri:not(#addLoan),[data-role="controleur"] [data-act^="edit"],[data-role="controleur"] [data-act^="del"],[data-role="lecteur"] [data-tab="set"],[data-role="controleur"] [data-tab="set"],[data-role="gestionnaire"] [data-tab="set"],[data-role="lecteur"] #set,[data-role="controleur"] #set,[data-role="gestionnaire"] #set{display:none!important}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}.ch{text-align:center;font-weight:600;color:var(--mute)}.cd{min-height:68px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:3px;overflow:hidden;font-size:.72rem}.cd.td{border:2px solid var(--orange)}.ce{background:var(--warnbg);color:var(--warn);border-radius:3px;margin-top:2px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ce.ov{background:var(--badbg);color:var(--bad)}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0b2a5b,#103a78);border-bottom:4px solid var(--orange)}
+header h1{letter-spacing:-.01em}
+nav{gap:2px}nav button{padding:11px 14px;border-radius:10px 10px 0 0;transition:opacity .15s}nav button:hover{opacity:1}nav button[aria-selected="true"]{box-shadow:inset 0 -3px 0 var(--orange)}
+h2{font-size:1.2rem;margin:20px 0 10px}
+.hero{display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:14px;margin-bottom:18px;background:var(--okbg);color:var(--ok)}.hero.bad{background:var(--badbg);color:var(--bad)}.hero b{display:block;font:800 1.6rem/1.1 "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}.hero span{font-size:.92rem;opacity:.85}.hero .led{width:30px;height:30px;flex:none}
+.stats{gap:10px}.stat{border-radius:10px;border-left-width:6px}.stat b{font-size:2.3rem;letter-spacing:-.02em}
+.row{border-radius:10px;border-left:5px solid var(--line);padding:14px 16px}
+.row:has(.led.bad){border-left-color:var(--bad)}.row:has(.led.warn){border-left-color:#f2a21b}.row:has(.led:not(.warn):not(.bad)){border-left-color:var(--ok)}
+.row h3{font-size:1.08rem}
+.btn{min-height:40px;border-radius:8px;transition:transform .08s,filter .15s}.btn:active{transform:scale(.97)}.btn.pri:hover{filter:brightness(1.08)}.btn.sm{min-height:34px}
+input,select,textarea{border-radius:8px;min-height:42px}textarea{min-height:0}
+.empty{border-radius:12px;padding:34px 14px}
+.note{border-top:1px solid var(--line);padding-top:12px}
+.cd{border-radius:6px}
+dialog{border-radius:14px}dialog[open]{animation:dlg .2s ease-out}@keyframes dlg{from{transform:translateY(18px);opacity:0}}
+@media (max-width:600px){dialog{margin:auto auto 0;width:100%;max-width:100%;border-radius:16px 16px 0 0;max-height:92vh}main{padding:12px 12px 70px}.acts{width:100%}.acts .btn{flex:1}.row .main{flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){dialog[open]{animation:none}}
+:root{--bg:#F2F6F6;--card:#fff;--ink:#0F2A2E;--mute:#4E6569;--line:#CFDCDD;--navy:#0A5C6B;--orange:#0B7285;--sun:#FFC93C;--side:#0A3F49;--ok:#17794A;--warn:#A15C00;--bad:#C0332A;--okbg:#E1F3E8;--warnbg:#FFF1CC;--badbg:#FBE3E0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1A1D;--card:#12272B;--ink:#E6F1F2;--mute:#93AEB2;--line:#234045;--navy:#6FD0E0;--orange:#3CB6CC;--side:#071619;--ok:#5FD09A;--warn:#F0B24C;--bad:#FF8B7E;--okbg:#14382B;--warnbg:#3A2E12;--badbg:#3E1F1C}}
+:root[data-theme="dark"]{--bg:#0B1A1D;--card:#12272B;--ink:#E6F1F2;--mute:#93AEB2;--line:#234045;--navy:#6FD0E0;--orange:#3CB6CC;--side:#071619;--ok:#5FD09A;--warn:#F0B24C;--bad:#FF8B7E;--okbg:#14382B;--warnbg:#3A2E12;--badbg:#3E1F1C}
+body{font-family:"Atkinson Hyperlegible",system-ui,sans-serif}
+h1,h2,h3,.stat b,.hero b{font-family:"Archivo",system-ui,sans-serif}
+.btn,nav button{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:700}
+:root:root header{background:var(--side);border-bottom:0}
+nav button[aria-selected="true"]{background:var(--sun);color:#10282C;box-shadow:none;opacity:1}
+.btn{border-radius:6px}.btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+.row{border-radius:6px;border-left:1px solid var(--line);border-right:6px solid var(--line);padding:14px 16px}
+.row:has(.led.bad){border-right-color:var(--bad);border-left-color:var(--line)}
+.row:has(.led.warn){border-right-color:#E0A100;border-left-color:var(--line)}
+.row:has(.led:not(.warn):not(.bad)){border-right-color:var(--ok);border-left-color:var(--line)}
+.stat{border-radius:6px;border:1px solid var(--line);border-bottom:5px solid var(--navy)}.stat.bad{border-color:var(--line);border-bottom-color:var(--bad)}.stat.warn{border-color:var(--line);border-bottom-color:#E0A100}.stat.ok{border-color:var(--line);border-bottom-color:var(--ok)}
+.hero{position:relative;overflow:hidden;border-radius:10px;padding:30px 20px 18px}.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:var(--ok)}.hero.bad::before{background:repeating-linear-gradient(-45deg,#FFC93C 0 12px,#10282C 12px 24px)}
+dialog{border-radius:10px}
+@media (min-width:900px){header{position:fixed;left:0;top:0;bottom:0;width:250px;padding:24px 14px;overflow:auto}header h1{font-size:1.3rem}header p{margin-bottom:18px}nav{flex-direction:column;gap:3px;overflow:visible}nav button{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;padding:11px 12px;border-radius:8px;font-size:.98rem}nav button:hover{background:rgba(255,255,255,.1)}nav button[aria-selected="true"]:hover{background:var(--sun)}main{margin-left:250px;max-width:none;padding:30px 40px 60px}}
+@media (max-width:899px){header{position:static;padding:12px 14px}header h1{font-size:1.1rem}header p{margin:2px 0 0;font-size:.78rem}nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));overflow-x:auto}nav button{flex:0 0 auto;color:var(--ink);opacity:1;font-size:.8rem;padding:9px 12px;border-radius:8px}main{padding-bottom:96px}}
+:root{--bg:#F5F7FA;--line:#E1E7EE;--side:#10243A;--orange:#0E7490;--navy:#0E4A63}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--side:#08131F}}
+:root[data-theme="dark"]{--side:#08131F}
+body{font-size:15.5px;line-height:1.55}
+header h1{font-weight:800;font-size:1.15rem}header h1::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--sun);margin-right:10px}
+header p{color:rgba(255,255,255,.62)}
+h2{font-size:1.1rem;font-weight:700;margin:26px 0 12px}
+.btn{border-radius:8px;box-shadow:0 1px 1px rgba(16,36,58,.05)}.btn.pri{box-shadow:0 1px 2px rgba(14,116,144,.3)}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--orange);outline-offset:1px;box-shadow:0 0 0 4px rgba(14,116,144,.16)}
+.tag{font-size:.75rem;padding:2px 9px}
+.row{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,36,58,.04)}
+.row:has(.led.bad){border-color:var(--line);box-shadow:inset 4px 0 0 var(--bad),0 1px 2px rgba(16,36,58,.04)}
+.row:has(.led.warn){border-color:var(--line);box-shadow:inset 4px 0 0 #E0A100,0 1px 2px rgba(16,36,58,.04)}
+.row:has(.led:not(.warn):not(.bad)){border-color:var(--line);box-shadow:inset 4px 0 0 var(--ok),0 1px 2px rgba(16,36,58,.04)}
+.stat{position:relative;border:1px solid var(--line);border-radius:10px;padding:20px 16px 14px;box-shadow:0 1px 2px rgba(16,36,58,.04)}.stat::before{content:"";position:absolute;top:0;left:16px;width:30px;height:4px;border-radius:0 0 4px 4px;background:var(--navy)}.stat.bad::before{background:var(--bad)}.stat.warn::before{background:#E0A100}.stat.ok::before{background:var(--ok)}
+.stat b{font-weight:700;font-size:2.1rem}
+.hero{border-radius:12px;padding:20px 22px;border:1px solid rgba(23,121,74,.25)}.hero.bad{border-color:rgba(192,51,42,.28)}.hero::before,.hero.bad::before{display:none}.hero b{font-size:1.4rem;font-weight:700}
+dialog{border-radius:12px;box-shadow:0 24px 60px rgba(8,19,31,.28)}
+dialog h2{margin:0 0 4px}
+@media (min-width:900px){nav button{color:rgba(255,255,255,.72);font-weight:700}nav button:hover{background:rgba(255,255,255,.08);color:#fff}nav button[aria-selected="true"],nav button[aria-selected="true"]:hover{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 3px 0 0 var(--sun)}main{padding:32px 44px 64px}}
+@media (max-width:899px){nav button[aria-selected="true"]{background:transparent;color:var(--orange);box-shadow:inset 0 3px 0 var(--orange)}header h1::before{margin-right:8px}}
+body.locked header,body.locked main{display:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>Matériel · Protection Civile 13</h1>
+  <p>Inventaire, sorties, alertes de stock et de péremption, vérification des radios DP2400 <span id="sync" class="tag t-n" title="Touche pour le diagnostic" style="cursor:pointer">Mode local</span></p>
+  <nav role="tablist">
+    <button role="tab" data-tab="home" aria-selected="true">Tableau de bord</button>
+    <button role="tab" data-tab="lots" aria-selected="false">Lots et sacs</button>
+    <button role="tab" data-tab="veh" aria-selected="false">Véhicules</button>
+    <button role="tab" data-tab="tasks" aria-selected="false">Tâches</button>
+    <button role="tab" data-tab="cal" aria-selected="false">Calendrier</button>
+    <button role="tab" data-tab="radios" aria-selected="false">Radios DP2400</button>
+    <button role="tab" data-tab="items" aria-selected="false">Matériel</button>
+    <button role="tab" data-tab="loans" aria-selected="false">Sorties et retours</button>
+    <button role="tab" data-tab="log" aria-selected="false">Historique</button>
+    <button role="tab" data-tab="set" aria-selected="false">Paramètres</button>
+  </nav>
+</header>
+<main>
+  <section id="home"></section>
+  <section id="radios" hidden>
+    <div class="bar"><input id="rq" type="search" placeholder="Rechercher un numéro de série, un porteur…" aria-label="Rechercher une radio"><select id="rf" aria-label="Filtrer"><option value="">Toutes</option><option value="late">En retard</option><option value="soon">À vérifier bientôt</option><option value="ok">À jour</option><option value="none">Jamais vérifiées</option></select><button class="btn" id="bulkRadios">Ajouter plusieurs radios</button><button class="btn" id="csvRadios">Copier en CSV</button><button class="btn pri" id="addRadio">Ajouter une radio</button></div>
+    <div id="rlist"></div>
+  </section>
+  <section id="items" hidden>
+    <div class="bar"><input id="iq" type="search" placeholder="Rechercher un matériel…" aria-label="Rechercher un matériel"><select id="ic" aria-label="Catégorie"></select><button class="btn" id="csvItems">Copier en CSV</button><button class="btn pri" id="addItem">Ajouter un matériel</button></div>
+    <div id="ilist"></div>
+  </section>
+  <section id="lots" hidden><div class="bar"><button class="btn" id="csvHist">Copier l'historique en CSV</button><button class="btn pri" id="addLot">Ajouter un lot</button></div><div id="lotlist"></div></section>
+  <section id="veh" hidden><div class="bar"><button class="btn pri" id="addVeh">Ajouter un véhicule</button></div><div id="vlist"></div></section>
+  <section id="tasks" hidden><div class="bar"><button class="btn pri" id="addTask">Ajouter une tâche</button></div><div id="tlist"></div></section>
+  <section id="log" hidden><div class="bar"><input id="lgq" type="search" placeholder="Rechercher dans l'historique…" aria-label="Rechercher dans l'historique"><select id="lgf" aria-label="Type d'action"><option value="">Toutes les actions</option><option value="Ajout">Ajouts</option><option value="Modification">Modifications</option><option value="Suppression">Suppressions</option><option value="Contrôle">Contrôles</option><option value="Retour">Retours</option></select><button class="btn" id="csvLog">Copier en CSV</button></div><div id="lglist"></div></section>
+  <section id="set" hidden><form id="fSet" style="display:grid;gap:12px;max-width:560px">
+<label>Nom de la structure<input name="org" required></label>
+<label>Catégories de matériel (une par ligne)<textarea name="cats" rows="5"></textarea></label>
+<label>États du matériel (libellé ; ok, attention ou problème)<textarea name="states" rows="4"></textarea></label>
+<label>Checklist de vérification des radios (un point par ligne)<textarea name="checks" rows="8"></textarea></label>
+<div class="two"><label>Radios : période de vérification (jours)<input type="number" name="radioDays" min="1"></label><label>Radios : alerte avant échéance (jours)<input type="number" name="soon" min="0"></label></div>
+<div class="two"><label>Péremption : alerte avant (jours)<input type="number" name="expDays" min="0"></label><label>Lots : alerte avant contrôle (jours)<input type="number" name="lotWarn" min="0"></label></div>
+<div class="two"><label>Véhicules : alerte avant échéance (jours)<input type="number" name="vehDays" min="0"></label><label>Échéancier : horizon (jours)<input type="number" name="horizon" min="1"></label></div>
+<div class="two"><label>Contrôle d'un lot par défaut (jours)<input type="number" name="lotFreq" min="1"></label><label>Thème de cet appareil<select name="theme"><option value="auto">Automatique</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label></div>
+<label>États des véhicules (libellé ; ok, attention ou problème)<textarea name="vstates" rows="3"></textarea></label>
+<label>Champs supplémentaires du matériel (libellé ; texte, nombre ou date)<textarea name="cfItems" rows="3"></textarea></label>
+<label>Champs supplémentaires des véhicules<textarea name="cfVeh" rows="3"></textarea></label>
+<label>Champs supplémentaires des radios<textarea name="cfRadios" rows="3"></textarea></label>
+<label>Rôle des nouveaux arrivants<select name="defRole"><option value="lecteur">Lecteur (lecture seule)</option><option value="controleur">Contrôleur (contrôles et sorties)</option><option value="gestionnaire">Gestionnaire (saisie)</option><option value="admin">Administrateur</option></select></label>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri">Enregistrer les paramètres</button><button class="btn" type="button" id="setReset">Rétablir les valeurs par défaut</button><button class="btn" type="button" id="setClean">Supprimer les exemples</button><button class="btn" type="button" id="bkSave">Sauvegarder les données</button><label class="btn" style="display:inline-block">Restaurer une sauvegarde<input type="file" id="bkLoad" accept=".json" hidden></label></div></form><div id="roleBox" style="max-width:560px;margin-top:24px"></div></section>
+  <section id="cal" hidden><div id="callist"></div></section>
+  <section id="loans" hidden><div class="bar"><button class="btn pri" id="addLoan">Enregistrer une sortie</button></div><div id="llist"></div></section>
+  <p class="note">Avec le badge « Synchronisé en équipe », les données sont partagées en temps réel entre les personnes qui ont accès à cette page. En mode local, elles restent sur cet appareil. Les exemples peuvent être supprimés.</p>
+</main>
+
+<dialog id="dAsk"><form method="dialog"><p id="askT" style="margin:0;white-space:pre-line"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" value="no" id="askNo">Annuler</button><button class="btn pri" value="yes">OK</button></div></form></dialog>
+<dialog id="dRadio"><form method="dialog" id="fRadio">
+  <h2 id="dRadioT">Radio</h2>
+  <div class="two"><label>N° de série<input name="serial" required></label><label>Repère interne<input name="tag" placeholder="ex. PC13-014"></label></div>
+  <div class="two"><label>Porteur / affectation<input name="holder" placeholder="ex. Antenne Marseille"></label><label>Dernière vérification<input type="date" name="last"></label></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer</button></div>
+</form></dialog>
+
+<dialog id="dCheck"><form method="dialog" id="fCheck">
+  <h2 id="dCheckT">Vérification annuelle</h2>
+  <div id="checks"></div>
+  <div class="two"><label>Date<input type="date" name="date" required></label><label>Vérifié par<input name="by" required></label></div>
+  <label>Remarques<textarea name="notes" rows="2" placeholder="Batterie à remplacer, antenne abîmée…"></textarea></label>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Valider la vérification</button></div>
+</form></dialog>
+
+<dialog id="dItem"><form method="dialog" id="fItem">
+  <h2 id="dItemT">Matériel</h2>
+  <label>Désignation<input name="name" required></label>
+  <div class="two"><label>Catégorie<select name="cat" id="catSel"></select></label><label>Quantité<input type="number" name="qty" min="0" value="1" required></label></div>
+  <div class="two"><label>État<select name="state"><option>Bon</option><option>À contrôler</option><option>À réparer</option><option>Hors service</option></select></label><label>Emplacement<input name="loc" placeholder="ex. Local Aix, VPSP 2"></label></div>
+  <div class="two"><label>Seuil mini d'alerte<input type="number" name="min" min="0"></label><label>Date de péremption<input type="date" name="exp"></label></div>
+  <label>Remarques<textarea name="note" rows="2"></textarea></label>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer</button></div>
+</form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<dialog id="dLot"><form method="dialog" id="fLot"><h2 id="dLotT">Lot</h2><label>Partir d'un modèle<select id="tpl"><option value="">Aucun</option><option value="h">Hygiène ambulance (quotidien)</option><option value="r">Radios et chargeurs (hebdomadaire)</option><option value="v">Véhicule : contrôle de départ (hebdomadaire)</option></select></label><label>Nom du lot<input name="name" required placeholder="ex. Lot A1 · Oxygénothérapie"></label><div class="two"><label>Véhicule<select name="veh" id="vSel"></select></label><label>Contrôle tous les (jours)<input type="number" name="freq" min="1" value="7" required></label></div><label>Contenu, un article par ligne<textarea name="items" rows="7" placeholder="Compresses stériles ; 10 ; 03/2027
+Tensiomètre ; 1
+Lampe stylo ; 1"></textarea></label><p class="meta" style="margin:0">Format : désignation ; quantité ; péremption (mois/année, facultatif)</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer</button></div></form></dialog>
+<dialog id="dChk"><form method="dialog" id="fChk"><h2 id="dChkT">Contrôle</h2><div id="chkItems"></div><div class="two"><label>Vérifié par<input name="by" required></label><label>Remarques<input name="notes"></label></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Signer le contrôle</button></div></form></dialog>
+<dialog id="dQR"><form method="dialog" style="text-align:center"><h2 id="qrT"></h2><div id="qrBox"></div><p class="meta">Collez ce QR code sur le sac ou le lot : le scan ouvre directement son contrôle.</p><button class="btn pri">Fermer</button></form></dialog>
+<dialog id="dVeh"><form method="dialog" id="fVeh"><h2 id="dVehT">Véhicule</h2><div class="two"><label>Nom<input name="name" required placeholder="ex. VPSP 1"></label><label>Immatriculation<input name="plate"></label></div><div class="two"><label>Prochain contrôle technique<input type="date" name="ct"></label><label>Prochain entretien<input type="date" name="ent"></label></div><label>État<select name="state"><option>Disponible</option><option>Immobilisé</option></select></label><label>Remarques<textarea name="note" rows="2"></textarea></label><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer</button></div></form></dialog>
+<dialog id="dTask"><form method="dialog" id="fTask"><h2>Ajouter une tâche</h2><label>Action à mener<input name="txt" required></label><div class="two"><label>Assignée à<input name="who"></label><label>Échéance<input type="date" name="due"></label></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer</button></div></form></dialog>
+<dialog id="dHist"><form method="dialog"><h2 id="hT"></h2><div id="hBody"></div><div style="text-align:right"><button class="btn pri">Fermer</button></div></form></dialog>
+<dialog id="dBulk"><form method="dialog" id="fBulk"><h2>Ajouter plusieurs radios</h2><label>Une radio par ligne : n° de série ; repère ; affectation<textarea name="list" rows="8" placeholder="123ABC456 ; PC13-001 ; Antenne Marseille"></textarea></label><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Ajouter</button></div></form></dialog>
+<dialog id="dLoan"><form method="dialog" id="fLoan"><h2>Enregistrer une sortie</h2><label>Matériel<select name="item" id="lItem" required></select></label><div class="two"><label>Quantité<input type="number" name="qty" min="1" value="1" required></label><label>Emprunteur<input name="who" required placeholder="Antenne, véhicule, nom"></label></div><div class="two"><label>Date de sortie<input type="date" name="out" required></label><label>Retour prévu<input type="date" name="due"></label></div><label>Remarques<input name="note"></label><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" data-close>Annuler</button><button class="btn pri" value="ok">Enregistrer la sortie</button></div></form></dialog>
+
+<script>
+function showErr(e){const m=(e&&(e.message||(e.error&&e.error.message)))||"erreur inconnue";let b=document.getElementById("errbar");if(!b){b=document.createElement("div");b.id="errbar";b.style.cssText="position:fixed;left:8px;right:8px;top:8px;z-index:99;background:#c0332a;color:#fff;padding:10px 12px;border-radius:8px;font:14px sans-serif";b.onclick=()=>b.remove();document.body.appendChild(b)}b.textContent="Erreur dans la page : "+m+" (touche pour fermer)"}
+window.addEventListener("error",showErr);window.addEventListener("unhandledrejection",e=>showErr({message:String(e.reason&&e.reason.message||e.reason)}));
+function ask(t,info){return new Promise(r=>{const d=document.getElementById("dAsk");document.getElementById("askT").textContent=t;document.getElementById("askNo").hidden=!!info;d.returnValue="";d.addEventListener("close",()=>r(d.returnValue==="yes"),{once:true});d.showModal()})}
+function notify(t){ask(t,true)}
+const CATS=["Radios et transmissions","Secourisme","Logistique","Véhicules","Signalisation","Informatique","Autre"];
+const CHECKS=["État extérieur (boîtier, écran, boutons, molette)","Antenne en bon état et bien vissée","Batterie : autonomie correcte, pas de gonflement","Clip ceinture et accessoires présents","Mise sous tension et affichage corrects","Test émission / réception sur un canal d'essai","Canaux et groupes programmés conformes","Chargeur et contacts de charge propres"];
+const KEY="pc13-materiel-v1";
+let S;
 function load(){return{radios:[],items:[],loans:[],lots:[],veh:[],tasks:[],cfg:[],roles:[],log:[]}}
 function save(){diffLog();pushDb();prev=JSON.stringify(S)}
 S=load();S.loans=S.loans||[];S.lots=S.lots||[];S.veh=S.veh||[];S.tasks=S.tasks||[];S.log=S.log||[];S.cfg=S.cfg||[];S.roles=S.roles||[];let prev=JSON.stringify(S);Object.defineProperty(S,"nid",{get(){return Date.now()*1000+Math.floor(Math.random()*1000)},set(){}});
